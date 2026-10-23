@@ -23,7 +23,7 @@ img{max-width:100%}
 
 /* ---------- cabeçalho ---------- */
 header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.top{display:flex;align-items:center;gap:8px;padding:8px 10px;max-width:1200px;margin:0 auto}
+.top{display:flex;align-items:center;gap:8px;padding:8px 10px;max-width:1700px;margin:0 auto}
 .ico{width:42px;height:42px;border-radius:12px;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:21px;cursor:pointer;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .ico.usr{width:auto;min-width:58px;padding:0 7px;flex-direction:column;gap:0;border-radius:12px}
 .ico.usr .ui{font-size:17px;line-height:1.1}
@@ -35,7 +35,8 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 .brand .sub{font-size:10px;font-weight:500;letter-spacing:2px;opacity:.85;display:block;margin-top:-2px}
 
 /* ---------- painéis ---------- */
-#banner{position:relative;max-width:1200px;margin:0 auto;overflow:hidden;background:#000;aspect-ratio:16/6;max-height:300px;min-height:120px;display:none}
+#banner{position:relative;width:100%;margin:0;overflow:hidden;background:#000;aspect-ratio:16/6;max-height:300px;min-height:120px;display:none}
+@media(min-width:900px){#banner{aspect-ratio:16/5;max-height:440px}}
 #bn-track{display:flex;height:100%;transition:transform .5s ease}
 .bn-s{min-width:100%;height:100%}
 .bn-s img,.bn-s video{width:100%;height:100%;object-fit:cover;display:block}
@@ -47,7 +48,7 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 
 /* ---------- filtros ---------- */
 .filtros{background:#fff;border-bottom:1px solid var(--br)}
-.filtros .in{max-width:1200px;margin:0 auto;padding:8px;display:flex;gap:6px;flex-wrap:nowrap;align-items:center}
+.filtros .in{max-width:1700px;margin:0 auto;padding:8px;display:flex;gap:6px;flex-wrap:nowrap;align-items:center}
 .filtros select,.filtros input[type=search]{padding:9px 7px;border:1px solid #ccc;border-radius:10px;font-size:12px;background:#fff;min-width:0;font-weight:500}
 .filtros select{flex:1 1 0;width:0;min-width:84px;max-width:130px;padding-left:5px;padding-right:2px}
 .filtros input[type=search]{flex:1.4 1 0;width:0}
@@ -56,20 +57,26 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 .chip.on{background:var(--red);color:#fff}
 .chip.nv{border-color:var(--blue);color:var(--blue)}
 .chip.nv.on{background:var(--blue);color:#fff}
-#ativos{max-width:1200px;margin:0 auto;padding:8px 10px 0;display:flex;gap:6px;flex-wrap:wrap}
+#ativos{max-width:1700px;margin:0 auto;padding:8px 10px 0;display:flex;gap:6px;flex-wrap:wrap}
 .tag{background:#222;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer}
 
 /* ---------- produtos ---------- */
-#grelha{max-width:1200px;margin:0 auto;padding:10px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(min-width:620px){#grelha{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:900px){#grelha{grid-template-columns:repeat(4,1fr)}}
-@media(min-width:1100px){#grelha{grid-template-columns:repeat(5,1fr)}}
+#grelha{max-width:1700px;margin:0 auto;padding:10px;display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:10px;touch-action:pan-y}
+#colbar{max-width:1700px;margin:0 auto;padding:8px 10px 0;display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:11px;color:#666;font-weight:500}
+#colbar button{width:32px;height:30px;border:1px solid #ccc;background:#fff;border-radius:8px;font-size:17px;line-height:1;cursor:pointer;color:#333}
+#colbar b{min-width:18px;text-align:center;font-size:13px;font-weight:600;color:#222}
+#grelha[data-c='1'] .nm{font-size:15px}#grelha[data-c='1'] .pr{font-size:18px}
+#grelha[data-c='5'] .nm,#grelha[data-c='6'] .nm,#grelha[data-c='7'] .nm,#grelha[data-c='8'] .nm,#grelha[data-c='9'] .nm,#grelha[data-c='10'] .nm{font-size:11px;min-height:40px;padding:6px 7px 0}
+#grelha[data-c='5'] .pr,#grelha[data-c='6'] .pr,#grelha[data-c='7'] .pr,#grelha[data-c='8'] .pr,#grelha[data-c='9'] .pr,#grelha[data-c='10'] .pr{font-size:13px}
+#grelha[data-c='5'] .btn-add,#grelha[data-c='6'] .btn-add,#grelha[data-c='7'] .btn-add,#grelha[data-c='8'] .btn-add,#grelha[data-c='9'] .btn-add,#grelha[data-c='10'] .btn-add{font-size:10px;padding:7px 2px}
+#grelha[data-c='7'] .btn-cx,#grelha[data-c='8'] .btn-cx,#grelha[data-c='9'] .btn-cx,#grelha[data-c='10'] .btn-cx{display:none}
+#grelha[data-c='6'] .qt button,#grelha[data-c='7'] .qt button,#grelha[data-c='8'] .qt button,#grelha[data-c='9'] .qt button,#grelha[data-c='10'] .qt button{width:26px;height:28px;font-size:15px}
 .card{background:#fff;border-radius:14px;border:1px solid var(--br);overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .card .ph{aspect-ratio:1/1;background:#fafafa;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .card .ph img{width:100%;height:100%;object-fit:contain}
 .card .ph span{font-size:30px;opacity:.25}
 .card .nm{padding:8px 10px 0;font-size:12.5px;font-weight:500;line-height:1.3;min-height:48px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.card .pr{padding:4px 10px;font-size:15px;font-weight:600;color:var(--red);letter-spacing:.1px}
+.card .pr{padding:4px 10px;font-size:15px;font-weight:600;color:var(--red);letter-spacing:.1px;text-align:center}
 .card .ac{display:flex;gap:6px;padding:0 10px 10px;align-items:center}
 .btn-add{flex:1;border:none;background:var(--red);color:#fff;border-radius:9px;padding:9px 4px;font-weight:600;font-size:11.5px;letter-spacing:.3px;cursor:pointer;white-space:nowrap}
 .btn-cx{border:1px solid #bbb;background:#fff;border-radius:9px;padding:6px 7px;font-size:10px;font-weight:600;cursor:pointer;line-height:1.1;text-align:center;color:#444}
@@ -88,13 +95,13 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 #gav .h{background:var(--red);color:#fff;padding:14px;display:flex;align-items:center;font-weight:900;letter-spacing:1px;position:sticky;top:0;z-index:2}
 #gav .h span{flex:1}
 #gav .h button{background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer}
-#marcas{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px}
-.mq{border:1.5px solid var(--br);border-radius:14px;background:#fff;padding:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+#marcas{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px}
+.mq{border:1px solid var(--br);border-radius:10px;background:#fff;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:center;overflow:hidden}
 .mq.on{border-color:var(--red);box-shadow:0 0 0 2px var(--red)}
-.mq .im{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#fafafa;border-radius:10px;overflow:hidden}
-.mq .im img{width:100%;height:100%;object-fit:contain}
+.mq .im{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#fff;overflow:hidden}
+.mq .im img{width:100%;height:100%;object-fit:contain;display:block}
 .mq .im span{font-size:28px;opacity:.3}
-.mq b{font-size:10.5px;font-weight:600;line-height:1.15;word-break:break-word}
+.mq b{font-size:10px;font-weight:600;line-height:1.1;word-break:break-word;padding:3px 3px 4px;background:#f5f5f5}
 
 /* ---------- janelas ---------- */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:none;align-items:flex-end;justify-content:center}
@@ -166,6 +173,7 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 </div></div>
 <div id="ativos"></div>
 
+<div id="colbar"><span>Produtos por linha</span><button id="c-menos" aria-label="Menos produtos por linha">−</button><b id="c-n">2</b><button id="c-mais" aria-label="Mais produtos por linha">+</button></div>
 <div id="grelha"></div>
 <div id="vazio"><h3>Sem produtos</h3><p>Experimenta mudar os filtros.</p></div>
 <div style="text-align:center"><button id="mais">MOSTRAR MAIS</button></div>
@@ -234,6 +242,16 @@ let CFG={nome:'LOJA',wa:'',logo:'',marcas:[],banners:[]};
 let PROD=[], PMAP=new Map(), SUBS=[];
 let CART=LS.get('LOJA_CART',{});
 const F={marca:'',sub:'',promo:false,novo:false,q:'',n:48};
+const MAXC=()=>window.innerWidth<700?5:10;
+function colsPadrao(){ const w=window.innerWidth; return w<620?2:w<900?3:w<1200?4:5; }
+let COLS=Math.min(MAXC(),Math.max(1,parseInt(LS.get('LOJA_COLS',0))||colsPadrao()));
+const passo=()=>Math.max(24,COLS*12);
+function setCols(n,redesenhar){
+  COLS=Math.min(MAXC(),Math.max(1,Math.round(n)));
+  const g=$('grelha'); g.style.setProperty('--cols',COLS); g.dataset.c=COLS; $('c-n').textContent=COLS;
+  LS.set('LOJA_COLS',COLS);
+  if(redesenhar){ F.n=Math.max(F.n,passo()); desenha(); }
+}
 
 /* ───────────── dados ───────────── */
 async function pedir(url){
@@ -257,6 +275,7 @@ async function iniciar(){
   if(CFG.logo){ const l=$('logo'); l.src=CFG.logo; l.style.display='block'; }
   const sel=$('f-cat');
   SUBS.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
+  setCols(COLS,false); F.n=passo();
   desenhaMarcas(); iniciaBanner(); desenha(); contaCart(); atualizaUser();
 }
 
@@ -325,13 +344,30 @@ function ativos(){
 }
 $('ativos').addEventListener('click',e=>{
   const x=e.target.dataset.x; if(!x) return;
-  F[x]=''; if(x==='sub') $('f-cat').value=''; F.n=48; desenhaMarcas(); desenha();
+  F[x]=''; if(x==='sub') $('f-cat').value=''; F.n=passo(); desenhaMarcas(); desenha();
 });
-$('f-cat').onchange=e=>{ F.sub=e.target.value; F.n=48; desenha(); };
-$('f-promo').onclick=e=>{ F.promo=!F.promo; e.currentTarget.classList.toggle('on',F.promo); F.n=48; desenha(); };
-$('f-novo').onclick=e=>{ F.novo=!F.novo; e.currentTarget.classList.toggle('on',F.novo); F.n=48; desenha(); };
-let tq; $('f-q').oninput=e=>{ clearTimeout(tq); tq=setTimeout(()=>{ F.q=e.target.value; F.n=48; desenha(); },180); };
-$('mais').onclick=()=>{ F.n+=48; desenha(); };
+$('f-cat').onchange=e=>{ F.sub=e.target.value; F.n=passo(); desenha(); };
+$('f-promo').onclick=e=>{ F.promo=!F.promo; e.currentTarget.classList.toggle('on',F.promo); F.n=passo(); desenha(); };
+$('f-novo').onclick=e=>{ F.novo=!F.novo; e.currentTarget.classList.toggle('on',F.novo); F.n=passo(); desenha(); };
+let tq; $('f-q').oninput=e=>{ clearTimeout(tq); tq=setTimeout(()=>{ F.q=e.target.value; F.n=passo(); desenha(); },180); };
+$('mais').onclick=()=>{ F.n+=passo(); desenha(); };
+
+/* ───────────── produtos por linha: botões + / − e pinça com os dedos ───────────── */
+$('c-menos').onclick=()=>setCols(COLS-1,true);
+$('c-mais').onclick=()=>setCols(COLS+1,true);
+(function(){
+  const g=$('grelha'); let d0=0, c0=0;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  g.addEventListener('touchstart',e=>{ if(e.touches.length===2){ d0=dist(e.touches); c0=COLS; } },{passive:true});
+  g.addEventListener('touchmove',e=>{
+    if(e.touches.length!==2||!d0) return;
+    e.preventDefault();
+    const n=Math.min(MAXC(),Math.max(1,Math.round(c0*d0/dist(e.touches)))); // afastar os dedos = menos colunas (maiores)
+    if(n!==COLS) setCols(n,false);
+  },{passive:false});
+  g.addEventListener('touchend',e=>{ if(d0&&e.touches.length<2){ d0=0; F.n=Math.max(F.n,passo()); desenha(); } });
+})();
+window.addEventListener('resize',()=>{ if(COLS>MAXC()) setCols(MAXC(),true); });
 
 /* ───────────── marcas ───────────── */
 function desenhaMarcas(){
@@ -341,7 +377,7 @@ function desenhaMarcas(){
 }
 $('marcas').addEventListener('click',e=>{
   const q=e.target.closest('[data-mk]'); if(!q) return;
-  F.marca=q.dataset.mk; F.n=48; fechaGav(); desenhaMarcas(); desenha(); window.scrollTo({top:0,behavior:'smooth'});
+  F.marca=q.dataset.mk; F.n=passo(); fechaGav(); desenhaMarcas(); desenha(); window.scrollTo({top:0,behavior:'smooth'});
 });
 function abreGav(){ $('vel').style.display='block'; $('gav').classList.add('on'); }
 function fechaGav(){ $('vel').style.display='none'; $('gav').classList.remove('on'); }
