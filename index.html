@@ -89,6 +89,10 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 .tg{position:absolute;top:3cqw;left:3cqw;font-size:clamp(7px,4.2cqw,11px);font-weight:600;padding:clamp(2px,1.5cqw,5px) clamp(4px,3cqw,9px);border-radius:clamp(5px,2.5cqw,8px);color:#fff;letter-spacing:.4px}
 .tg.p{background:var(--red)}.tg.n{background:var(--blue);left:auto;right:3cqw}
 @container (max-width:84px){.btn-cx{display:none}.card .nm{-webkit-line-clamp:2;min-height:2.6em}}
+#grelha .fh{grid-column:1/-1;display:flex;align-items:center;gap:8px;background:#2B2B2B;color:#fff;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;user-select:none;margin-top:4px}
+#grelha .fh .ar{width:18px;text-align:center;font-size:14px}
+#grelha .fh small{margin-left:auto;opacity:.65;font-weight:500;text-transform:none;letter-spacing:0;font-size:11px}
+#grelha .fh:active{background:#444}
 #mais{display:none;margin:6px auto 30px;border:none;background:var(--dark);color:#fff;padding:14px 26px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer}
 #vazio{text-align:center;padding:50px 20px;opacity:.6;display:none}
 
@@ -126,6 +130,8 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 .msg.ok{color:#0a7a35}
 .ci{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
 .ci img{width:52px;height:52px;object-fit:contain;background:#fafafa;border-radius:8px;flex-shrink:0}
+.cf{background:#2B2B2B;color:#fff;font-size:11px;font-weight:600;letter-spacing:.6px;padding:6px 10px;border-radius:8px;margin-top:8px;text-transform:uppercase}
+.ci.ind{padding-left:14px}
 .ci .t{flex:1;font-size:12.5px;font-weight:700;line-height:1.25;min-width:0}
 .ci .t small{display:block;color:#777;font-weight:600;margin-top:2px}
 .ci .qt{flex:0 0 auto;width:118px}
@@ -142,6 +148,9 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
   #print-area h1{font-size:18px;margin:0 0 2px}
   #print-area table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
   #print-area td,#print-area th{border-bottom:1px solid #bbb;padding:4px 3px;text-align:left}
+  #print-area{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #print-area tr.fr td{background:#e6e6e6;font-weight:bold;text-transform:uppercase;border-bottom:1px solid #888;padding-top:6px}
+  #print-area td.ip{padding-left:18px}
   #print-area td.r,#print-area th.r{text-align:right}
 }
 #barra{position:fixed;left:0;right:0;bottom:0;background:#E60000;color:#fff;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 -2px 10px rgba(0,0,0,.2)}
@@ -323,25 +332,43 @@ function cartaoQt(p){
    ? '<div class="qt"><button data-m="'+p.i+'">−</button><b>'+q+'</b><button data-a="'+p.i+'">+</button></div>'
    : '<button class="btn-add" data-a="'+p.i+'">ADICIONAR</button>';
 }
-function desenha(){
-  const lista=filtrados();
-  const vis=lista.slice(0,F.n);
-  $('grelha').innerHTML=vis.map(p=>
-    '<div class="card" id="c'+p.i+'">'+
+const FECH=new Set(); // famílias fechadas (setas)
+function famDe(p){ return String(p.c||'').trim()||'OUTROS'; }
+const cmp=(a,b)=>famDe(a).localeCompare(famDe(b),'pt')||String(a.s||'').localeCompare(String(b.s||''),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true});
+function cartao(p){
+  return '<div class="card" id="c'+p.i+'">'+
       (p.pr?'<span class="tg p">PROMO</span>':'')+(p.nv?'<span class="tg n">NOVO</span>':'')+
       '<div class="ph" data-fi="'+p.i+'"><span>📦</span></div>'+
-      ((p.c||p.s)?'<div class="fam" title="'+esc(p.c||p.s)+'">'+esc(p.c||p.s)+'</div>':'')+
       '<div class="nm">'+esc(p.n)+'</div>'+
       '<div class="pr">'+eur(p.p)+'</div>'+
       '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
-    '</div>').join('');
+    '</div>';
+}
+function desenha(){
+  const lista=filtrados().sort(cmp);
+  const grupos=[]; let g=null;
+  lista.forEach(p=>{ const f=famDe(p); if(!g||g.f!==f){ g={f,ps:[]}; grupos.push(g); } g.ps.push(p); });
+  let orc=F.n, vis=[], h='';
+  for(const gr of grupos){
+    if(orc<=0) break;
+    const fechada=FECH.has(gr.f);
+    h+='<div class="fh" data-f="'+esc(gr.f)+'"><span class="ar">'+(fechada?'▸':'▾')+'</span><b>'+esc(gr.f)+'</b><small>'+gr.ps.length+(gr.ps.length===1?' produto':' produtos')+'</small></div>';
+    if(!fechada){ const tira=gr.ps.slice(0,orc); vis.push(...tira); orc-=tira.length; h+=tira.map(cartao).join(''); }
+  }
+  $('grelha').innerHTML=h;
+  const aberta=lista.filter(p=>!FECH.has(famDe(p))).length, resto=aberta-vis.length;
   $('vazio').style.display=lista.length?'none':'block';
   $('vazio').innerHTML='<h3>Sem produtos</h3><p>Experimenta mudar os filtros.</p>';
-  $('mais').style.display=lista.length>F.n?'inline-block':'none';
-  $('mais').textContent='MOSTRAR MAIS ('+(lista.length-F.n)+')';
+  $('mais').style.display=resto>0?'inline-block':'none';
+  $('mais').textContent='MOSTRAR MAIS ('+resto+')';
   carregaFotos(vis);
   ativos();
 }
+$('grelha').addEventListener('click',e=>{
+  const h=e.target.closest('.fh'); if(!h) return;
+  const f=h.dataset.f; if(FECH.has(f)) FECH.delete(f); else FECH.add(f);
+  desenha();
+});
 function ativos(){
   const t=[];
   if(F.marca) t.push('<span class="tag" data-x="marca">🏷️ '+esc(F.marca)+' ✕</span>');
@@ -447,13 +474,15 @@ $('grelha').addEventListener('click',e=>{
   if(a) muda(+a.dataset.a, +(a.dataset.n||1));
   else if(m) muda(+m.dataset.m,-1);
 });
-function linhas(){ return Object.keys(CART).map(id=>PMAP.get(+id)?{p:PMAP.get(+id),q:CART[id]}:null).filter(Boolean); }
+function linhas(){ return Object.keys(CART).map(id=>PMAP.get(+id)?{p:PMAP.get(+id),q:CART[id]}:null).filter(Boolean).sort((a,b)=>cmp(a.p,b.p)); }
 function total(){ return linhas().reduce((a,l)=>a+l.p.p*l.q,0); }
 function desenhaCart(){
   const ls=linhas();
+  let _f=null;
   $('cart-lista').innerHTML=ls.length?ls.map(l=>{
-    const u=foto(l.p);
-    return '<div class="ci">'+(u?'<img alt="" src="'+u+'">':'<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">')+
+    const u=foto(l.p), f=famDe(l.p);
+    const cab=(f!==_f)?'<div class="cf">'+esc(f)+'</div>':''; _f=f;
+    return cab+'<div class="ci ind">'+(u?'<img alt="" src="'+u+'">':'<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">')+
       '<div class="t">'+esc(l.p.n)+'<small>'+eur(l.p.p)+' × '+l.q+' = <b>'+eur(l.p.p*l.q)+'</b></small></div>'+
       '<div class="qt"><button data-cm="'+l.p.i+'">−</button><b>'+l.q+'</b><button data-ca="'+l.p.i+'">+</button></div></div>';
   }).join(''):'<p class="hint" style="padding:14px 0">O carrinho está vazio.</p>';
@@ -476,7 +505,8 @@ function textoEncomenda(){
   t+=new Date().toLocaleString('pt-PT')+'\n';
   if(c){ t+='\nCliente: '+c.nome+'\nTel: '+c.tel+(c.email?'\nEmail: '+c.email:'')+(c.morada?'\nMorada: '+c.morada:'')+(c.nif?'\nNIF: '+c.nif:'')+'\n'; }
   t+='\n';
-  ls.forEach(l=>{ t+=l.q+'x '+l.p.n+' — '+eur(l.p.p*l.q)+'\n'; });
+  let _g=null;
+  ls.forEach(l=>{ const f=famDe(l.p); if(f!==_g){ t+=(_g===null?'':'\n')+'*'+f+'*\n'; _g=f; } t+='   '+l.q+'x '+l.p.n+' — '+eur(l.p.p*l.q)+'\n'; });
   t+='\n*TOTAL: '+eur(total())+'*';
   return t;
 }
@@ -492,7 +522,7 @@ $('b-pdf').onclick=()=>{
   $('print-area').innerHTML='<h1>'+esc(CFG.nome||'Loja')+' — Encomenda</h1><div>'+new Date().toLocaleString('pt-PT')+'</div>'+
     (c?'<div style="margin-top:6px"><b>'+esc(c.nome)+'</b> · '+esc(c.tel)+(c.morada?' · '+esc(c.morada):'')+(c.nif?' · NIF '+esc(c.nif):'')+'</div>':'')+
     '<table><tr><th>Produto</th><th class="r">Qtd</th><th class="r">Preço</th><th class="r">Total</th></tr>'+
-    ls.map(l=>'<tr><td>'+esc(l.p.n)+'</td><td class="r">'+l.q+'</td><td class="r">'+eur(l.p.p)+'</td><td class="r">'+eur(l.p.p*l.q)+'</td></tr>').join('')+
+    (()=>{ let g=null; return ls.map(l=>{ const f=famDe(l.p); const cab=(f!==g)?'<tr class="fr"><td colspan="4">'+esc(f)+'</td></tr>':''; g=f; return cab+'<tr><td class="ip">'+esc(l.p.n)+'</td><td class="r">'+l.q+'</td><td class="r">'+eur(l.p.p)+'</td><td class="r">'+eur(l.p.p*l.q)+'</td></tr>'; }).join(''); })()+
     '<tr><td colspan="3" class="r"><b>TOTAL</b></td><td class="r"><b>'+eur(total())+'</b></td></tr></table>';
   setTimeout(()=>window.print(),80);
 };
