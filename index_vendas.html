@@ -302,6 +302,9 @@ header:not(.solid) .brand .nome{filter:none}
 .tg.n{right:auto;left:3cqw;top:3cqw}
 .tg.p + .tg.n{top:calc(3cqw + clamp(15px,8.4cqw,23px))}
 .qb{position:absolute;top:2cqw;right:2cqw;z-index:4;min-width:clamp(18px,10cqw,28px);height:clamp(18px,10cqw,28px);padding:0 4px;box-sizing:border-box;border-radius:999px;background:#e60000;color:#fff;font-weight:800;font-size:clamp(10px,5.6cqw,15px);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);border:2px solid #fff;pointer-events:none}
+#barra{gap:8px}
+#barra #b-fam{margin:0 auto;border:1.5px solid var(--acc);background:#fff;color:var(--acc);border-radius:14px;padding:3px 9px;font-size:10.5px;font-weight:800;white-space:nowrap;cursor:pointer}
+#barra.filt #b-fam{border-color:#fff;background:transparent;color:#fff}
 </style>
 </head>
 <body>
@@ -363,7 +366,6 @@ header:not(.solid) .brand .nome{filter:none}
     <div id="v-err" class="verr"></div>
     <button class="big" id="b-novo" style="display:none;background:var(--grn)">➕ GUARDAR COMO PEDIDO NOVO</button>
     <button class="big" id="b-guarda">💾 GUARDAR PEDIDO</button>
-    <button class="big wa" id="b-wa">📲 ENVIAR POR WHATSAPP</button>
     <button class="big pdf" id="b-pdf">📄 GUARDAR / IMPRIMIR PDF</button>
     <button class="big sec" id="b-limpa">🗑️ Limpar carrinho</button>
   </div>
@@ -395,7 +397,7 @@ header:not(.solid) .brand .nome{filter:none}
   <div id="u-perfil" style="display:none"></div>
 </div></div>
 
-<div id="barra"><span id="barra-l">🛒 Ver carrinho</span><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
+<div id="barra"><span id="barra-l">🛒 Ver carrinho</span><button id="b-fam" type="button">▲ Fechar famílias</button><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
 <div id="lb"><button id="lb-x" aria-label="Fechar">✕</button><button class="lb-a" id="lb-prev" aria-label="Anterior">‹</button><button class="lb-a" id="lb-next" aria-label="Seguinte">›</button><div id="lb-n"></div><div id="lb-c" style="display:contents"></div></div>
 <div id="print-area"></div>
 <div id="aviso"></div>
@@ -537,7 +539,10 @@ function cartao(p){
       '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
     '</div>';
 }
-function desenha(){
+function desenha(){ desenha0(); setFamBtn(); }
+function setFamBtn(){ const fams=[...new Set(filtrados().map(famDe))]; const b=$('b-fam'); if(b) b.textContent=(fams.length&&fams.every(f=>FECH.has(f)))?'▼ Abrir famílias':'▲ Fechar famílias'; }
+$('b-fam').onclick=e=>{ e.stopPropagation(); const fams=[...new Set(filtrados().map(famDe))]; if(fams.every(f=>FECH.has(f))) FECH.clear(); else fams.forEach(f=>FECH.add(f)); desenha(); };
+function desenha0(){
   const lista=filtrados().sort(cmp);
   const grupos=[]; let g=null;
   lista.forEach(p=>{ const f=famDe(p); if(!g||g.f!==f){ g={f,ps:[]}; grupos.push(g); } g.ps.push(p); });
@@ -760,7 +765,6 @@ function pdfDe(o){
   setTimeout(()=>window.print(),80);
 }
 function atual(){ VCLI=$('v-cli').value.trim(); VNOTA=$('v-nota').value.trim(); return {ts:Date.now(),cli:VCLI,nota:VNOTA,ls:linhas()}; }
-$('b-wa').onclick=()=>{ const o=atual(); if(!o.ls.length) return aviso('O carrinho está vazio.'); waDe(o); };
 $('b-pdf').onclick=()=>{ const o=atual(); if(!o.ls.length) return aviso('O carrinho está vazio.'); pdfDe(o); };
 
 /* ───────────── pedidos guardados (offline, dentro do carrinho) ───────────── */
@@ -796,7 +800,7 @@ function desenhaPed(){
       let g=null;
       r='<div class="rd">'+rs.map(l=>{ const f=famDe(l.p); const c=f!==g?'<div class="cf">'+esc(f)+'</div>':''; g=f; return c+'<div class="rl"><b>'+l.q+'×</b> '+esc(l.p.n)+'<span>'+eur(l.p.p*l.q)+'</span></div>'; }).join('')+
         '<div class="rl rt"><b>TOTAL</b><span>'+eur(rs.reduce((s,l)=>s+l.p.p*l.q,0))+'</span></div>'+
-        '<div class="pdb"><button data-pa="rwa" data-d="'+iso+'">📲 WhatsApp</button><button data-pa="rpdf" data-d="'+iso+'">📄 PDF</button></div></div>';
+        '<div class="pdb"><button data-pa="rpdf" data-d="'+iso+'">📄 PDF</button></div></div>';
     }
     return '<div class="dh"><b>'+diaPT(iso)+'</b><span>'+os.length+(os.length===1?' pedido':' pedidos')+' · '+eur(tot)+'</span></div>'+
       '<button class="rs'+(aberto?' on':'')+'" data-pa="res" data-d="'+iso+'">📦 RESUMO DO DIA '+(aberto?'▲':'▼')+'</button>'+r+
@@ -804,7 +808,7 @@ function desenhaPed(){
         const n=o.ls.reduce((s,l)=>s+l.q,0);
         return '<div class="pd"><div class="pdh"><b>'+esc(o.cli||'(sem nome)')+'</b>'+(o.env?' <span class="ok">✅ enviado</span>':'')+'<span>'+new Date(o.ts).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+
           '<div class="pds">'+n+(n===1?' artigo':' artigos')+' · <b>'+eur(totalDe(o.ls))+'</b>'+(o.nota?' · '+esc(o.nota):'')+'</div>'+
-          '<div class="pdb"><button data-pa="ab" data-id="'+o.id+'">✏️ ABRIR</button><button data-pa="wa" data-id="'+o.id+'">📲</button><button data-pa="pdf" data-id="'+o.id+'">📄</button><button data-pa="del" data-id="'+o.id+'">🗑️</button></div></div>';
+          '<div class="pdb"><button data-pa="ab" data-id="'+o.id+'">✏️ ABRIR</button><button data-pa="pdf" data-id="'+o.id+'">📄</button><button data-pa="del" data-id="'+o.id+'">🗑️</button></div></div>';
       }).join('');
   }).join(''):'<p class="hint" style="padding:14px 0">'+(PQ?'Nenhum pedido com esse nome.':'Ainda não há pedidos guardados. Faz o carrinho e carrega em GUARDAR PEDIDO.')+'</p>';
   $('v-ped').innerHTML=h;
@@ -817,14 +821,13 @@ $('v-ped').addEventListener('click',e=>{
   const b=e.target.closest('[data-pa]'); if(!b) return;
   const act=b.dataset.pa;
   if(act==='res'){ DIA_ABERTO=DIA_ABERTO===b.dataset.d?'':b.dataset.d; desenhaPed(); return; }
-  if(act==='rwa'||act==='rpdf'){
+  if(act==='rpdf'){
     const iso=b.dataset.d, ls=resumoDia(iso);
     const o={ts:new Date(iso+'T12:00:00').getTime(),tit:'Resumo do dia',cli:diaPT(iso),nota:'',ls};
-    if(act==='rwa') waDe(o); else pdfDe(o); return;
+    pdfDe(o); return;
   }
   const all=pedidos(), o=all.find(x=>x.id==b.dataset.id); if(!o) return;
   if(act==='del'){ if(confirm('Apagar o pedido de "'+(o.cli||'sem nome')+'"?')){ guardaPedidos(all.filter(x=>x.id!==o.id)); desenhaPed(); } }
-  else if(act==='wa'){ waDe(o); }
   else if(act==='pdf'){ pdfDe(o); }
   else if(act==='ab'){
     if(Object.keys(CART).length && !confirm('O carrinho atual será substituído pelo pedido de "'+(o.cli||'sem nome')+'". Continuar?')) return;

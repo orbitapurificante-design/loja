@@ -278,6 +278,9 @@ header:not(.solid) .brand .nome{filter:none}
 .tg.n{right:auto;left:3cqw;top:3cqw}
 .tg.p + .tg.n{top:calc(3cqw + clamp(15px,8.4cqw,23px))}
 .qb{position:absolute;top:2cqw;right:2cqw;z-index:4;min-width:clamp(18px,10cqw,28px);height:clamp(18px,10cqw,28px);padding:0 4px;box-sizing:border-box;border-radius:999px;background:#e60000;color:#fff;font-weight:800;font-size:clamp(10px,5.6cqw,15px);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);border:2px solid #fff;pointer-events:none}
+#barra{gap:8px}
+#barra #b-fam{margin:0 auto;border:1.5px solid var(--acc);background:#fff;color:var(--acc);border-radius:14px;padding:3px 9px;font-size:10.5px;font-weight:800;white-space:nowrap;cursor:pointer}
+#barra.filt #b-fam{border-color:#fff;background:transparent;color:#fff}
 </style>
 </head>
 <body>
@@ -360,7 +363,7 @@ header:not(.solid) .brand .nome{filter:none}
   <div id="u-perfil" style="display:none"></div>
 </div></div>
 
-<div id="barra"><span id="barra-l">🛒 Ver carrinho</span><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
+<div id="barra"><span id="barra-l">🛒 Ver carrinho</span><button id="b-fam" type="button">▲ Fechar famílias</button><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
 <div id="lb"><button id="lb-x" aria-label="Fechar">✕</button><button class="lb-a" id="lb-prev" aria-label="Anterior">‹</button><button class="lb-a" id="lb-next" aria-label="Seguinte">›</button><div id="lb-n"></div><div id="lb-c" style="display:contents"></div></div>
 <div id="print-area"></div>
 <div id="aviso"></div>
@@ -475,7 +478,10 @@ function cartao(p){
       '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
     '</div>';
 }
-function desenha(){
+function desenha(){ desenha0(); setFamBtn(); }
+function setFamBtn(){ const fams=[...new Set(filtrados().map(famDe))]; const b=$('b-fam'); if(b) b.textContent=(fams.length&&fams.every(f=>FECH.has(f)))?'▼ Abrir famílias':'▲ Fechar famílias'; }
+$('b-fam').onclick=e=>{ e.stopPropagation(); const fams=[...new Set(filtrados().map(famDe))]; if(fams.every(f=>FECH.has(f))) FECH.clear(); else fams.forEach(f=>FECH.add(f)); desenha(); };
+function desenha0(){
   const lista=filtrados().sort(cmp);
   const grupos=[]; let g=null;
   lista.forEach(p=>{ const f=famDe(p); if(!g||g.f!==f){ g={f,ps:[]}; grupos.push(g); } g.ps.push(p); });
