@@ -86,8 +86,8 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 .qt{flex:1;display:flex;align-items:center;justify-content:space-between;background:#f0f0f0;border-radius:clamp(6px,3cqw,10px);overflow:hidden;min-width:0}
 .qt button{border:none;background:var(--dark);color:#fff;width:clamp(22px,15cqw,42px);height:clamp(24px,14cqw,38px);font-size:clamp(13px,7.5cqw,20px);font-weight:500;cursor:pointer;padding:0}
 .qt b{font-size:clamp(10px,6cqw,15px);font-weight:600}
-.card.esg .ph{filter:grayscale(.85);opacity:.5}
-.esgot{z-index:3;position:absolute;left:0;right:0;top:50cqw;transform:translateY(-50%);text-align:center;background:rgba(26,26,26,.88);color:#fff;font-weight:700;letter-spacing:.8px;font-size:clamp(8px,6cqw,15px);padding:clamp(3px,2cqw,7px) 0;pointer-events:none}
+.card.esg .ph{opacity:.55}
+.esgot{z-index:3;position:absolute;left:0;right:0;top:50cqw;transform:translateY(-50%);text-align:center;background:none;color:#d40000;font-weight:800;letter-spacing:1px;font-size:clamp(10px,7.6cqw,19px);text-shadow:0 0 3px #fff,0 0 7px #fff,0 0 12px #fff;padding:0;pointer-events:none}
 .btn-add.off{background:#9a9a9a;cursor:default}
 .tg{position:absolute;top:3cqw;left:3cqw;font-size:clamp(7px,4.2cqw,11px);font-weight:600;padding:clamp(2px,1.5cqw,5px) clamp(4px,3cqw,9px);border-radius:clamp(5px,2.5cqw,8px);color:#fff;letter-spacing:.4px}
 .tg.p{background:var(--red)}.tg.n{background:var(--blue);left:auto;right:3cqw}
@@ -224,6 +224,24 @@ header{background:rgba(238,240,243,.40);-webkit-backdrop-filter:blur(8px);backdr
 #barra{padding:5px 14px;padding-bottom:calc(5px + env(safe-area-inset-bottom,0px));font-size:12px;background:rgba(238,240,243,.78)}
 body{padding-bottom:40px}
 #aviso{bottom:52px}
+
+/* ================= v3: topo transparente sobre o painel; filtros em barra branca a seguir ================= */
+header{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;transition:background .2s,box-shadow .2s}
+header.solid{background:#fff}
+.top{padding:4px 6px;gap:4px}
+.brand{flex:1;justify-content:flex-start;gap:6px;margin-left:0}
+#fbar{position:sticky;top:var(--hh);z-index:45;background:#fff;color:var(--ink)}
+#fbar .in{padding:4px 6px 5px}
+#fbar select,#fbar input[type=search],#fbar .chip{text-shadow:none;border:1px solid #e1e5eb;background-color:transparent}
+#fbar select:focus,#fbar input[type=search]:focus,#fbar select:active,#fbar .chip:active{background-color:#eef2f8}
+#fbar .chip.on{background-color:var(--grn);border-color:var(--grn);color:#fff}
+#fbar .chip.nv.on{background-color:var(--acc);border-color:var(--acc);color:#fff}
+#fbar.stuck{box-shadow:0 2px 6px rgba(0,0,0,.12)}
+#banner{will-change:opacity}
+header:not(.solid) .brand .sub{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+header:not(.solid) .ico{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+header:not(.solid) .ico.usr .ut{color:#fff}
+header:not(.solid) .brand .nome{filter:drop-shadow(0 0 3px #fff)}
 </style>
 </head>
 <body>
@@ -238,12 +256,6 @@ body{padding-bottom:40px}
     <button class="ico usr" id="b-user" aria-label="Entrar"><span class="ui">👤</span><span class="ut" id="ut">ENTRAR</span></button>
     <button class="ico" id="b-cart" aria-label="Carrinho">🛒<span class="bd" id="bd">0</span></button>
   </div>
-<div class="filtros"><div class="in">
-  <select id="f-cat"><option value="">Categorias</option></select>
-  <button class="chip" id="f-promo">🔥PROMOÇÕES</button>
-  <button class="chip nv" id="f-novo">✨NOVIDADES</button>
-  <input type="search" id="f-q" placeholder="🔍 Pesquisar…">
-</div></div>
 </header>
 
 <div id="espaco"></div>
@@ -253,6 +265,13 @@ body{padding-bottom:40px}
   <button class="bn-a" id="bn-next" aria-label="Seguinte">›</button>
   <div id="bn-dots"></div>
 </div>
+
+<div class="filtros" id="fbar"><div class="in">
+  <select id="f-cat"><option value="">Categorias</option></select>
+  <button class="chip" id="f-promo">🔥PROMOÇÕES</button>
+  <button class="chip nv" id="f-novo">✨NOVIDADES</button>
+  <input type="search" id="f-q" placeholder="🔍 Pesquisar…">
+</div></div>
 
 <div id="ativos"></div>
 
@@ -712,6 +731,17 @@ function limpaFiltros(){
 })();
 iniciar();
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+})();
+
+(function(){
+  var hd=document.querySelector('header'),fb=document.getElementById('fbar'),bn=document.getElementById('banner'),t=false;
+  function f(){ t=false;
+    var hh=hd.offsetHeight, st=fb.getBoundingClientRect().top<=hh+1;
+    hd.classList.toggle('solid',st); fb.classList.toggle('stuck',st);
+    if(bn.style.display!=='none'){ var h=bn.offsetHeight||1; bn.style.opacity=Math.max(0,Math.min(1,1-(window.scrollY||0)/(h*.75))); }
+  }
+  window.addEventListener('scroll',function(){ if(!t){t=true;requestAnimationFrame(f);} },{passive:true});
+  window.addEventListener('resize',f); setInterval(f,500); f();
 })();
 </script>
 </body>
