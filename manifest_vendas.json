@@ -1,0 +1,26 @@
+{
+  "id": "loja-dumelhor-vendas",
+  "name": "DUMELHOR Vendas",
+  "short_name": "DM Vendas",
+  "description": "Pedidos dos vendedores DUMELHOR (offline)",
+  "lang": "pt-PT",
+  "start_url": "./index_vendas.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF0F3",
+  "theme_color": "#EEF0F3",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
