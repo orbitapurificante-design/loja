@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#E60000">
+<meta name="theme-color" content="#EEF0F3">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -167,6 +167,37 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 #barra{position:fixed;left:0;right:0;bottom:0;background:#E60000;color:#fff;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 -2px 10px rgba(0,0,0,.2)}
 #barra b{font-weight:700}
 #aviso{position:fixed;bottom:76px;left:10px;right:10px;background:#222;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;z-index:200;display:none;text-align:center}
+
+/* ================= TEMA CINZA: tudo continua o fundo, menus translúcidos sobre o painel ================= */
+:root{--hh:99px;--acc:#0B5FD6;--grn:#0a9d58;--ink:#1b2330}
+html,body{background:#EEF0F3}
+header{position:fixed;left:0;right:0;top:0;background:rgba(238,240,243,.66);-webkit-backdrop-filter:blur(12px) saturate(1.2);backdrop-filter:blur(12px) saturate(1.2);color:var(--ink);box-shadow:0 1px 0 rgba(0,0,0,.06)}
+#espaco{height:var(--hh)}
+.ico{background:rgba(255,255,255,.55);color:var(--ink)}
+.ico.usr .ut{color:var(--ink)}
+.brand img{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.brand .nome{background:linear-gradient(90deg,var(--grn),var(--acc));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;font-weight:800}
+.brand .sub{color:#3a4760;opacity:1;font-weight:600}
+#banner{aspect-ratio:auto;max-height:none;min-height:0;height:calc(var(--hh) + clamp(120px,30vw,300px))}
+@media(min-width:900px){#banner{aspect-ratio:auto;max-height:none;height:calc(var(--hh) + clamp(220px,24vw,420px))}}
+.bn-a{top:calc(50% + var(--hh) / 2)}
+.filtros select,.filtros input[type=search],.chip{background-color:rgba(255,255,255,.66);color:var(--ink)}
+.filtros select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%231b2330'/%3E%3C/svg%3E")}
+.filtros input[type=search]::placeholder{color:#56637b}
+.filtros input:focus,.filtros select:focus{background-color:#fff}
+.chip.on{background-color:var(--grn);color:#fff}
+.chip.nv.on{background-color:var(--acc);color:#fff}
+#barra{background:rgba(238,240,243,.88);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink);box-shadow:0 -1px 0 rgba(0,0,0,.08)}
+#gav .h{background:#e4e7ec;color:var(--ink)}
+#gav .h button{background:rgba(0,0,0,.08);color:var(--ink)}
+.big{background:var(--acc)}
+.tabs button.on{background:var(--acc)}
+/* compactar linhas de família (fechadas ou abertas) */
+#ativos:empty{display:none}
+#ativos{padding-top:4px}
+#grelha{padding-top:4px;row-gap:8px}
+#grelha .fh{margin-top:0}
+#grelha .fh + .fh{margin-top:-5px}
 </style>
 </head>
 <body>
@@ -189,6 +220,7 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 </div></div>
 </header>
 
+<div id="espaco"></div>
 <div id="banner">
   <div id="bn-track"></div>
   <button class="bn-a" id="bn-prev" aria-label="Anterior">‹</button>
@@ -302,7 +334,7 @@ async function iniciar(){
   const sel=$('f-cat');
   SUBS.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
   setCols(COLS,false); F.n=passo();
-  desenhaMarcas(); iniciaBanner(); desenha(); contaCart(); atualizaUser();
+  desenhaMarcas(); iniciaBanner(); desenha(); contaCart(); atualizaUser(); medeHH();
 }
 
 /* ───────────── fotos (pacotes) ───────────── */
@@ -348,6 +380,7 @@ function cartaoQt(p){
 const FECH=new Set(); // famílias fechadas (setas)
 function famDe(p){ return String(p.c||'').trim()||'OUTROS'; }
 const cmp=(a,b)=>famDe(a).localeCompare(famDe(b),'pt')||String(a.s||'').localeCompare(String(b.s||''),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true});
+const cmpNome=(a,b)=>famDe(a).localeCompare(famDe(b),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true,sensitivity:'base'}); // grelha: família → nome (A–Z)
 function cartao(p){
   return '<div class="card'+(p.ex?' esg':'')+'" id="c'+p.i+'">'+
       (p.ex?'<span class="esgot">ESGOTADO</span>':'')+
@@ -359,7 +392,7 @@ function cartao(p){
     '</div>';
 }
 function desenha(){
-  const lista=filtrados().sort(cmp);
+  const lista=filtrados().sort(cmpNome);
   const grupos=[]; let g=null;
   lista.forEach(p=>{ const f=famDe(p); if(!g||g.f!==f){ g={f,ps:[]}; grupos.push(g); } g.ps.push(p); });
   let orc=F.n, vis=[], h='';
@@ -434,7 +467,7 @@ $('b-menu').onclick=abreGav; $('vel').onclick=fechaGav; $('b-fecha-gav').onclick
 let bi=0, bt=null;
 function iniciaBanner(){
   const bs=CFG.banners||[]; if(!bs.length) return;
-  $('banner').style.display='block';
+  $('banner').style.display='block'; $('espaco').style.display='none';
   $('banner').appendChild($('colbar'));
   $('bn-track').innerHTML=bs.map(b=>'<div class="bn-s">'+(b.t==='video'
      ?'<video src="'+esc(b.s)+'" muted playsinline preload="metadata"></video>'
@@ -627,6 +660,30 @@ document.querySelectorAll('.modal').forEach(m=>{
   m.addEventListener('click',e=>{ if(e.target===m || e.target.hasAttribute('data-fecha')) m.classList.remove('on'); });
 });
 
+function medeHH(){ document.documentElement.style.setProperty('--hh',document.querySelector('header').offsetHeight+'px'); }
+window.addEventListener('resize',medeHH); window.addEventListener('load',medeHH); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(medeHH); medeHH();
+function limpaFiltros(){
+  F.marca='';F.sub='';F.promo=false;F.novo=false;F.q=''; F.n=passo();
+  $('f-cat').value=''; $('f-q').value=''; $('f-promo').classList.remove('on'); $('f-novo').classList.remove('on');
+  desenhaMarcas(); desenha();
+}
+/* botão "voltar" do Android: fecha o que estiver aberto, limpa filtros e só depois sai (2 toques) */
+(function(){
+  history.replaceState({r:1},''); history.pushState({a:1},'');
+  let sairAte=0;
+  function fechouAlgo(){
+    if($('lb').classList.contains('on')){ fechaLB(); return true; }
+    const m=document.querySelector('.modal.on'); if(m){ m.classList.remove('on'); return true; }
+    if($('gav').classList.contains('on')){ fechaGav(); return true; }
+    if(F.marca||F.sub||F.promo||F.novo||F.q){ limpaFiltros(); window.scrollTo({top:0}); return true; }
+    return false;
+  }
+  window.addEventListener('popstate',()=>{
+    if(fechouAlgo()){ history.pushState({a:1},''); return; }
+    if(Date.now()<sairAte){ history.back(); return; }
+    sairAte=Date.now()+2500; aviso('Toca em voltar outra vez para sair'); history.pushState({a:1},'');
+  });
+})();
 iniciar();
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 })();
