@@ -407,9 +407,36 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 const eur = n => (Math.round(n*100)/100).toFixed(2).replace('.',',')+' €';
+/* Armazenamento: IndexedDB (sem o limite pequeno do localStorage, que é partilhado por todo o site) + cópia no localStorage quando cabe */
+const KV={};
 const LS = {
-  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
-  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+  _db:null, avisou:false,
+  get(k,d){ if(k in KV) return KV[k]; try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){
+    KV[k]=v;
+    try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){}
+    if(!LS._db) return;
+    try{
+      const tx=LS._db.transaction('kv','readwrite'); tx.objectStore('kv').put(JSON.parse(JSON.stringify(v)),k);
+      tx.onerror=tx.onabort=()=>LS.erro();
+    }catch(e){ LS.erro(); }
+  },
+  erro(){ if(LS.avisou) return; LS.avisou=true; alert('⚠️ Não consegui guardar no telemóvel (memória cheia ou bloqueada). Liberta espaço e tenta de novo.'); },
+  pronto:new Promise(res=>{
+    try{
+      const r=indexedDB.open('DM_VENDAS_KV',1);
+      r.onupgradeneeded=()=>r.result.createObjectStore('kv');
+      r.onerror=()=>res();
+      r.onsuccess=()=>{
+        LS._db=r.result;
+        try{
+          const tx=r.result.transaction('kv','readonly'), st=tx.objectStore('kv'), ks=st.getAllKeys(), vs=st.getAll();
+          tx.oncomplete=()=>{ ks.result.forEach((k,i)=>{ KV[k]=vs.result[i]; }); res(); };
+          tx.onerror=()=>res();
+        }catch(e){ res(); }
+      };
+    }catch(e){ res(); }
+  })
 };
 function aviso(t){ const a=$('aviso'); a.textContent=t; a.style.display='block'; clearTimeout(aviso._t); aviso._t=setTimeout(()=>a.style.display='none',3200); }
 
@@ -897,6 +924,8 @@ function estadoEdit(){
   $('b-guarda').textContent=EDIT_ID?'💾 ATUALIZAR ESTE PEDIDO':'💾 GUARDAR PEDIDO';
   $('b-novo').style.display=EDIT_ID?'block':'none';
 }
+$('v-cli').addEventListener('input',()=>{ VCLI=$('v-cli').value; });
+$('v-nota').addEventListener('input',()=>{ VNOTA=$('v-nota').value; });
 function erroCli(t){ const e=$('v-err'); e.textContent=t; e.style.display='block'; $('v-cli').classList.add('bad'); $('v-cli').focus(); $('v-cli').scrollIntoView({block:'center',behavior:'smooth'}); aviso(t); }
 $('v-cli').addEventListener('input',()=>{ $('v-err').style.display='none'; $('v-cli').classList.remove('bad'); });
 function guardar(novo){ $('v-err').style.display='none'; $('v-cli').classList.remove('bad');
@@ -1009,6 +1038,15 @@ function limpaFiltros(){
   window.addEventListener('online',()=>setTimeout(pre,800));
 })();
 iniciar(); contaPed();
+LS.pronto.then(()=>{
+  // dados guardados em IndexedDB: carrinho, pedidos e definições
+  const lsPed=(()=>{ try{ return JSON.parse(localStorage.getItem(PED_K)||'[]'); }catch(e){ return []; } })();
+  if(!(PED_K in KV) && lsPed.length) LS.set(PED_K,lsPed);       // migra pedidos antigos
+  if('VENDAS_CART' in KV) CART=KV.VENDAS_CART;
+  if(PROD.length) desenha();
+  contaCart(); contaPed();
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+});
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 })();
 
