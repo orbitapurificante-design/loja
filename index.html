@@ -256,6 +256,12 @@ header:not(.solid) .brand .nome{filter:none}
 .brand > div{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1}
 .brand .nome{font-size:clamp(18px,5.2vw,26px);line-height:1}
 .brand .sub{display:block;font-size:11px;letter-spacing:2.4px;margin-top:3px;font-weight:700;text-align:center;width:100%;padding-left:2.4px}
+
+/* v5 */
+.brand > div{flex-direction:row;align-items:center;justify-content:flex-start;gap:6px}
+.brand .nome{font-size:clamp(18px,5.4vw,26px);position:relative;top:2px}
+.brand .sub{width:auto;margin:0;padding:0;font-size:10px;letter-spacing:1.2px;line-height:1.15;text-align:left;white-space:normal;max-width:52px;position:relative;top:2px}
+.mq .im{aspect-ratio:10/6}
 </style>
 </head>
 <body>
@@ -265,7 +271,7 @@ header:not(.solid) .brand .nome{filter:none}
     <button class="ico" id="b-menu" aria-label="Marcas">☰</button>
     <div class="brand">
       <img id="logo" alt="">
-      <div><span class="nome" id="nome">LOJA</span><span class="sub">LOJA ONLINE</span></div>
+      <div><span class="nome" id="nome">LOJA</span><span class="sub">LOJA<br>ONLINE</span></div>
     </div>
     <button class="ico usr" id="b-user" aria-label="Entrar"><span class="ui">👤</span><span class="ut" id="ut">ENTRAR</span></button>
     <button class="ico" id="b-cart" aria-label="Carrinho">🛒<span class="bd" id="bd">0</span></button>
