@@ -198,6 +198,32 @@ header{position:fixed;left:0;right:0;top:0;background:rgba(238,240,243,.66);-web
 #grelha{padding-top:4px;row-gap:8px}
 #grelha .fh{margin-top:0}
 #grelha .fh + .fh{margin-top:-5px}
+
+/* ================= v2: compacto, sem fundos nos menus, mais transparente ================= */
+header{background:rgba(238,240,243,.40);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:none}
+.top{padding:4px 8px;gap:6px}
+.ico{width:36px;height:36px;font-size:18px;border-radius:10px;background:transparent;transition:background .15s}
+.ico:active,.ico:focus-visible{background:rgba(255,255,255,.8)}
+.ico.usr{min-width:44px;padding:0 6px}
+.ico.usr .ui{font-size:15px}
+.ico.usr .ut{font-size:8.5px;letter-spacing:.3px}
+.ico .bd{top:-2px;right:-2px;min-width:16px;height:16px;font-size:10px}
+.brand{gap:7px}
+.brand img{height:34px;width:34px;border-radius:8px;padding:1px}
+.brand .nome{font-size:clamp(16px,4.6vw,24px);line-height:1.05}
+.brand .sub{font-size:8.5px;letter-spacing:1.6px;margin-top:-1px}
+.brand .nome,.brand .sub,.ico,.ico.usr .ut{text-shadow:0 0 8px rgba(255,255,255,.75)}
+.brand .nome{text-shadow:none;filter:drop-shadow(0 0 4px rgba(255,255,255,.7))}
+.filtros .in{padding:0 6px 4px;gap:4px}
+.filtros select,.filtros input[type=search],.chip{background-color:transparent;height:26px;font-size:11px;border-radius:13px;text-shadow:0 0 8px rgba(255,255,255,.8);transition:background-color .15s}
+.filtros select{min-width:92px;padding:0 18px 0 6px}
+.chip{padding:0 7px;font-size:9.5px}
+.filtros select:active,.filtros input[type=search]:focus,.filtros select:focus,.chip:active{background-color:rgba(255,255,255,.82);text-shadow:none}
+.chip.on{background-color:var(--grn);color:#fff;text-shadow:none}
+.chip.nv.on{background-color:var(--acc);color:#fff;text-shadow:none}
+#barra{padding:5px 14px;padding-bottom:calc(5px + env(safe-area-inset-bottom,0px));font-size:12px;background:rgba(238,240,243,.78)}
+body{padding-bottom:40px}
+#aviso{bottom:52px}
 </style>
 </head>
 <body>
@@ -209,14 +235,14 @@ header{position:fixed;left:0;right:0;top:0;background:rgba(238,240,243,.66);-web
       <img id="logo" alt="">
       <div><span class="nome" id="nome">LOJA</span><span class="sub">LOJA ONLINE</span></div>
     </div>
-    <button class="ico usr" id="b-user" aria-label="Entrar"><span class="ui">👤</span><span class="ut" id="ut">ENTRAR /<br>REGISTAR</span></button>
+    <button class="ico usr" id="b-user" aria-label="Entrar"><span class="ui">👤</span><span class="ut" id="ut">ENTRAR</span></button>
     <button class="ico" id="b-cart" aria-label="Carrinho">🛒<span class="bd" id="bd">0</span></button>
   </div>
 <div class="filtros"><div class="in">
   <select id="f-cat"><option value="">Categorias</option></select>
   <button class="chip" id="f-promo">🔥PROMOÇÕES</button>
   <button class="chip nv" id="f-novo">✨NOVIDADES</button>
-  <input type="search" id="f-q" placeholder="Pesquisar…">
+  <input type="search" id="f-q" placeholder="🔍 Pesquisar…">
 </div></div>
 </header>
 
@@ -392,7 +418,7 @@ function cartao(p){
     '</div>';
 }
 function desenha(){
-  const lista=filtrados().sort(cmpNome);
+  const lista=filtrados().sort(cmp);
   const grupos=[]; let g=null;
   lista.forEach(p=>{ const f=famDe(p); if(!g||g.f!==f){ g={f,ps:[]}; grupos.push(g); } g.ps.push(p); });
   let orc=F.n, vis=[], h='';
@@ -613,7 +639,7 @@ async function hash(pw){
   catch(e){ let h=5381; for(const ch of 'dm|'+pw) h=((h<<5)+h+ch.charCodeAt(0))|0; return 'x'+h; }
 }
 const tel9=s=>String(s||'').replace(/\D/g,'');
-function atualizaUser(){ const c=cliente(); $('b-user').querySelector('.ui').textContent=c?'✅':'👤'; $('ut').innerHTML=c?esc(String(c.nome).split(' ')[0].slice(0,9)):'ENTRAR /<br>REGISTAR'; $('b-user').title=c?c.nome:'Entrar'; }
+function atualizaUser(){ const c=cliente(); $('b-user').querySelector('.ui').textContent=c?'✅':'👤'; $('ut').innerHTML=c?esc(String(c.nome).split(' ')[0].slice(0,9)):'ENTRAR'; $('b-user').title=c?c.nome:'Entrar'; }
 function msg(t,ok){ const m=$('u-msg'); m.textContent=t||''; m.className='msg'+(ok?' ok':''); }
 function mostraUser(){
   const c=cliente();
