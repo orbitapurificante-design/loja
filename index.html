@@ -242,6 +242,20 @@ header:not(.solid) .brand .sub{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 header:not(.solid) .ico{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 header:not(.solid) .ico.usr .ut{color:#fff}
 header:not(.solid) .brand .nome{filter:drop-shadow(0 0 3px #fff)}
+
+/* ================= v4: topo sempre branco, painel por baixo dele ================= */
+header,header.solid{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.07)}
+#banner{height:clamp(120px,30vw,300px)}
+@media(min-width:900px){#banner{height:clamp(220px,24vw,420px)}}
+.bn-a{top:50%}
+header:not(.solid) .brand .sub,header:not(.solid) .ico,header:not(.solid) .ico.usr .ut{color:var(--ink);text-shadow:none}
+header:not(.solid) .brand .nome{filter:none}
+.ico{color:var(--ink)}
+.brand{align-items:center}
+.brand img{height:40px;width:40px}
+.brand > div{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1}
+.brand .nome{font-size:clamp(18px,5.2vw,26px);line-height:1}
+.brand .sub{display:block;font-size:11px;letter-spacing:2.4px;margin-top:3px;font-weight:700;text-align:center;width:100%;padding-left:2.4px}
 </style>
 </head>
 <body>
@@ -512,7 +526,7 @@ $('b-menu').onclick=abreGav; $('vel').onclick=fechaGav; $('b-fecha-gav').onclick
 let bi=0, bt=null;
 function iniciaBanner(){
   const bs=CFG.banners||[]; if(!bs.length) return;
-  $('banner').style.display='block'; $('espaco').style.display='none';
+  $('banner').style.display='block';
   $('banner').appendChild($('colbar'));
   $('bn-track').innerHTML=bs.map(b=>'<div class="bn-s">'+(b.t==='video'
      ?'<video src="'+esc(b.s)+'" muted playsinline preload="metadata"></video>'
