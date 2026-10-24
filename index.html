@@ -86,6 +86,9 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 .qt{flex:1;display:flex;align-items:center;justify-content:space-between;background:#f0f0f0;border-radius:clamp(6px,3cqw,10px);overflow:hidden;min-width:0}
 .qt button{border:none;background:var(--dark);color:#fff;width:clamp(22px,15cqw,42px);height:clamp(24px,14cqw,38px);font-size:clamp(13px,7.5cqw,20px);font-weight:500;cursor:pointer;padding:0}
 .qt b{font-size:clamp(10px,6cqw,15px);font-weight:600}
+.card.esg .ph{filter:grayscale(.85);opacity:.5}
+.esgot{z-index:3;position:absolute;left:0;right:0;top:50cqw;transform:translateY(-50%);text-align:center;background:rgba(26,26,26,.88);color:#fff;font-weight:700;letter-spacing:.8px;font-size:clamp(8px,6cqw,15px);padding:clamp(3px,2cqw,7px) 0;pointer-events:none}
+.btn-add.off{background:#9a9a9a;cursor:default}
 .tg{position:absolute;top:3cqw;left:3cqw;font-size:clamp(7px,4.2cqw,11px);font-weight:600;padding:clamp(2px,1.5cqw,5px) clamp(4px,3cqw,9px);border-radius:clamp(5px,2.5cqw,8px);color:#fff;letter-spacing:.4px}
 .tg.p{background:var(--red)}.tg.n{background:var(--blue);left:auto;right:3cqw}
 @container (max-width:84px){.btn-cx{display:none}.card .nm{-webkit-line-clamp:2;min-height:2.6em}}
@@ -97,6 +100,9 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:150;display:none;align-items:center;justify-content:center;padding:14px}
 #lb.on{display:flex}
 #lb img,#lb video{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+#lb .lb-a{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:26px;cursor:pointer;z-index:2}
+#lb #lb-prev{left:10px}#lb #lb-next{right:10px}
+#lb-n{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#fff;font-size:12px;opacity:.8}
 #lb-x{position:absolute;top:12px;right:12px;width:42px;height:42px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:22px;cursor:pointer}
 #mais{display:none;margin:6px auto 30px;border:none;background:var(--dark);color:#fff;padding:14px 26px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer}
 #vazio{text-align:center;padding:50px 20px;opacity:.6;display:none}
@@ -241,7 +247,7 @@ header{background:var(--red);color:#fff;position:sticky;top:0;z-index:50;box-sha
 </div></div>
 
 <div id="barra"><span>🛒 Ver carrinho</span><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
-<div id="lb"><button id="lb-x" aria-label="Fechar">✕</button><div id="lb-c" style="display:contents"></div></div>
+<div id="lb"><button id="lb-x" aria-label="Fechar">✕</button><button class="lb-a" id="lb-prev" aria-label="Anterior">‹</button><button class="lb-a" id="lb-next" aria-label="Seguinte">›</button><div id="lb-n"></div><div id="lb-c" style="display:contents"></div></div>
 <div id="print-area"></div>
 <div id="aviso"></div>
 
@@ -334,6 +340,7 @@ function filtrados(){
 }
 function cartaoQt(p){
   const q=CART[p.i]||0;
+  if(p.ex && !q) return '<button class="btn-add off" disabled>ESGOTADO</button>';
   return q>0
    ? '<div class="qt"><button data-m="'+p.i+'">−</button><b>'+q+'</b><button data-a="'+p.i+'">+</button></div>'
    : '<button class="btn-add" data-a="'+p.i+'">ADICIONAR</button>';
@@ -342,12 +349,13 @@ const FECH=new Set(); // famílias fechadas (setas)
 function famDe(p){ return String(p.c||'').trim()||'OUTROS'; }
 const cmp=(a,b)=>famDe(a).localeCompare(famDe(b),'pt')||String(a.s||'').localeCompare(String(b.s||''),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true});
 function cartao(p){
-  return '<div class="card" id="c'+p.i+'">'+
+  return '<div class="card'+(p.ex?' esg':'')+'" id="c'+p.i+'">'+
+      (p.ex?'<span class="esgot">ESGOTADO</span>':'')+
       (p.pr?'<span class="tg p">PROMO</span>':'')+(p.nv?'<span class="tg n">NOVO</span>':'')+
       '<div class="ph" data-fi="'+p.i+'"><span>📦</span></div>'+
       '<div class="nm">'+esc(p.n)+'</div>'+
       '<div class="pr">'+eur(p.p)+'</div>'+
-      '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
+      '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
     '</div>';
 }
 function desenha(){
@@ -451,18 +459,36 @@ function vaiBanner(i){
     bt=setTimeout(seguinte,20000);
   } else if(bs.length>1){ bt=setTimeout(seguinte,5000); }
 }
-/* abrir o painel atual em grande; fechar com o ✕ ou tocando fora da imagem */
-function abreLB(){
-  const sl=$('bn-track').children[bi]; if(!sl) return;
-  clearTimeout(bt); document.querySelectorAll('#bn-track video').forEach(v=>v.pause());
-  const im=sl.querySelector('img'), vd=sl.querySelector('video');
+/* painel em grande: setas, dedo (deslizar) e teclado passam por todos os painéis */
+let lbi=0;
+function mostraLB(i){
+  const n=$('bn-track').children.length; if(!n) return;
+  lbi=(i+n)%n;
+  const sl=$('bn-track').children[lbi], im=sl.querySelector('img'), vd=sl.querySelector('video');
   $('lb-c').innerHTML=vd?'<video src="'+esc(vd.getAttribute('src'))+'" controls autoplay playsinline></video>':'<img alt="" src="'+(im?im.src:'')+'">';
-  $('lb').classList.add('on');
+  $('lb-n').textContent=(lbi+1)+' / '+n;
+  const um=n<2; $('lb-prev').style.display=$('lb-next').style.display=um?'none':'block';
 }
-function fechaLB(){ $('lb').classList.remove('on'); $('lb-c').innerHTML=''; vaiBanner(bi); }
+function abreLB(){
+  clearTimeout(bt); document.querySelectorAll('#bn-track video').forEach(v=>v.pause());
+  mostraLB(bi); $('lb').classList.add('on');
+}
+function fechaLB(){ $('lb').classList.remove('on'); $('lb-c').innerHTML=''; vaiBanner(lbi); }
 $('banner').addEventListener('click',e=>{ if(e.target.closest('.bn-a,#bn-dots,#colbar')) return; abreLB(); });
-$('lb').addEventListener('click',e=>{ if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO') return; fechaLB(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape' && $('lb').classList.contains('on')) fechaLB(); });
+$('lb').addEventListener('click',e=>{
+  if(e.target.closest('#lb-prev')) return mostraLB(lbi-1);
+  if(e.target.closest('#lb-next')) return mostraLB(lbi+1);
+  if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO') return;
+  fechaLB();
+});
+(function(){ let x0=null; const l=$('lb');
+  l.addEventListener('touchstart',e=>{ x0=e.touches.length===1?e.touches[0].clientX:null; },{passive:true});
+  l.addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>50){ e.preventDefault(); mostraLB(lbi+(dx<0?1:-1)); } });
+})();
+document.addEventListener('keydown',e=>{
+  if(!$('lb').classList.contains('on')) return;
+  if(e.key==='Escape') fechaLB(); else if(e.key==='ArrowLeft') mostraLB(lbi-1); else if(e.key==='ArrowRight') mostraLB(lbi+1);
+});
 $('bn-prev').onclick=()=>vaiBanner(bi-1);
 $('bn-next').onclick=()=>vaiBanner(bi+1);
 $('bn-dots').onclick=e=>{ if(e.target.dataset.d!=null) vaiBanner(+e.target.dataset.d); };
@@ -480,11 +506,12 @@ function contaCart(){
 }
 function muda(id,d){
   const p=PMAP.get(id); if(!p) return;
+  if(p.ex && d>0){ aviso('Produto esgotado.'); return; }
   const q=Math.max(0,(CART[id]||0)+d);
   if(q) CART[id]=q; else delete CART[id];
   guardaCart();
   const ac=$('ac'+id);
-  if(ac) ac.innerHTML=cartaoQt(p)+(p.u>1?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'');
+  if(ac) ac.innerHTML=cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'');
   if($('m-cart').classList.contains('on')) desenhaCart();
 }
 $('grelha').addEventListener('click',e=>{
@@ -501,7 +528,7 @@ function desenhaCart(){
     const u=foto(l.p), f=famDe(l.p);
     const cab=(f!==_f)?'<div class="cf">'+esc(f)+'</div>':''; _f=f;
     return cab+'<div class="ci ind">'+(u?'<img alt="" src="'+u+'">':'<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">')+
-      '<div class="t">'+esc(l.p.n)+'<small>'+eur(l.p.p)+' × '+l.q+' = <b>'+eur(l.p.p*l.q)+'</b></small></div>'+
+      '<div class="t">'+esc(l.p.n)+(l.p.ex?' <b style="color:#c00;font-size:10px">ESGOTADO</b>':'')+'<small>'+eur(l.p.p)+' × '+l.q+' = <b>'+eur(l.p.p*l.q)+'</b></small></div>'+
       '<div class="qt"><button data-cm="'+l.p.i+'">−</button><b>'+l.q+'</b><button data-ca="'+l.p.i+'">+</button></div></div>';
   }).join(''):'<p class="hint" style="padding:14px 0">O carrinho está vazio.</p>';
   $('cart-total').textContent=eur(total());
