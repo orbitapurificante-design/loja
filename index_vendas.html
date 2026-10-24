@@ -299,6 +299,9 @@ header:not(.solid) .brand .nome{filter:none}
 .ev .ck{display:flex;align-items:center;gap:8px;font-weight:600;font-size:12px}.ev .ck input{width:18px;margin:0}
 .evk{font-weight:800;color:#b71c1c;font-size:12px;margin:8px 0}
 .ev .pdb button.on{background:var(--acc);color:#fff}.ev .pdb button.go{background:var(--grn);color:#fff}
+.tg.n{right:auto;left:3cqw;top:3cqw}
+.tg.p + .tg.n{top:calc(3cqw + clamp(15px,8.4cqw,23px))}
+.qb{position:absolute;top:2cqw;right:2cqw;z-index:4;min-width:clamp(18px,10cqw,28px);height:clamp(18px,10cqw,28px);padding:0 4px;box-sizing:border-box;border-radius:999px;background:#e60000;color:#fff;font-weight:800;font-size:clamp(10px,5.6cqw,15px);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);border:2px solid #fff;pointer-events:none}
 </style>
 </head>
 <body>
@@ -358,6 +361,7 @@ header:not(.solid) .brand .nome{filter:none}
     <label>CLIENTE *</label><input type="text" id="v-cli" placeholder="Nome do cliente" autocomplete="off">
     <label>NOTA</label><input type="text" id="v-nota" placeholder="Observações do pedido" autocomplete="off">
     <div id="v-err" class="verr"></div>
+    <button class="big" id="b-novo" style="display:none;background:var(--grn)">➕ GUARDAR COMO PEDIDO NOVO</button>
     <button class="big" id="b-guarda">💾 GUARDAR PEDIDO</button>
     <button class="big wa" id="b-wa">📲 ENVIAR POR WHATSAPP</button>
     <button class="big pdf" id="b-pdf">📄 GUARDAR / IMPRIMIR PDF</button>
@@ -499,6 +503,7 @@ function cartao(p){
   return '<div class="card'+(p.ex?' esg':'')+'" id="c'+p.i+'">'+
       (p.ex?'<span class="esgot">ESGOTADO</span>':'')+
       (p.pr?'<span class="tg p">PROMO</span>':'')+(p.nv?'<span class="tg n">NOVO</span>':'')+
+      '<span class="qb" id="qb'+p.i+'"'+(CART[p.i]?'':' style="display:none"')+'>'+(CART[p.i]||0)+'</span>'+
       '<div class="ph" data-fi="'+p.i+'"><span>📦</span></div>'+
       '<div class="nm">'+esc(p.n)+'</div>'+
       '<div class="pr">'+eur(p.p)+'</div>'+
@@ -657,6 +662,7 @@ function muda(id,d){
   const q=Math.max(0,(CART[id]||0)+d);
   if(q) CART[id]=q; else delete CART[id];
   guardaCart();
+  const qb=$('qb'+id); if(qb){ qb.textContent=q; qb.style.display=q?'flex':'none'; }
   const ac=$('ac'+id);
   if(ac) ac.innerHTML=cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'');
   if($('m-cart').classList.contains('on')) desenhaCart();
@@ -884,18 +890,23 @@ async function enviarEnc(lista){
 }
 
 function estadoEdit(){
+  if(EDIT_ID && !pedidos().some(x=>x.id===EDIT_ID)) EDIT_ID=null;
+  if(!Object.keys(CART).length) EDIT_ID=null;
   $('v-cli').value=VCLI; $('v-nota').value=VNOTA;
-  const e=$('v-edit'); if(EDIT_ID){ e.style.display='block'; e.innerHTML='✏️ A editar um pedido guardado. <b>GUARDAR</b> atualiza-o.'; } else e.style.display='none';
+  const e=$('v-edit'); if(EDIT_ID){ e.style.display='block'; e.innerHTML='✏️ A editar o pedido de <b>'+esc(VCLI||'(sem nome)')+'</b>.'; } else e.style.display='none';
+  $('b-guarda').textContent=EDIT_ID?'💾 ATUALIZAR ESTE PEDIDO':'💾 GUARDAR PEDIDO';
+  $('b-novo').style.display=EDIT_ID?'block':'none';
 }
 function erroCli(t){ const e=$('v-err'); e.textContent=t; e.style.display='block'; $('v-cli').classList.add('bad'); $('v-cli').focus(); $('v-cli').scrollIntoView({block:'center',behavior:'smooth'}); aviso(t); }
 $('v-cli').addEventListener('input',()=>{ $('v-err').style.display='none'; $('v-cli').classList.remove('bad'); });
-$('b-guarda').onclick=()=>{ $('v-err').style.display='none'; $('v-cli').classList.remove('bad');
+function guardar(novo){ $('v-err').style.display='none'; $('v-cli').classList.remove('bad');
   const o=atual(); if(!o.ls.length) return aviso('O carrinho está vazio.');
   if(!o.cli){ erroCli('Escreve o nome do cliente para guardar o pedido.'); return; }
-  const reg={id:EDIT_ID||Date.now(),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u}}))};
+  const reg={id:(EDIT_ID&&!novo)?EDIT_ID:Date.now()+Math.floor(Math.random()*1000),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u}}))};
   const all=pedidos().filter(x=>x.id!==reg.id); all.push(reg); guardaPedidos(all);
-  CART={}; VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); desenha(); aba('p'); aviso('Pedido guardado ✅');
-};
+  CART={}; VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); desenha(); aba('p'); aviso('Pedido guardado ✅ ('+pedidos().length+' guardados)');
+}
+$('b-guarda').onclick=()=>guardar(false); $('b-novo').onclick=()=>guardar(true);
 
 /* ───────────── conta do cliente (guardada neste telemóvel) ───────────── */
 function contas(){ return LS.get('LOJA_CONTAS',{}); }

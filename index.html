@@ -275,6 +275,9 @@ header:not(.solid) .brand .nome{filter:none}
 .card .ph{cursor:pointer}
 @keyframes pop{0%{box-shadow:0 0 0 0 rgba(10,157,88,.7)}100%{box-shadow:0 0 0 12px rgba(10,157,88,0)}}
 .card.pop{animation:pop .45s ease-out}
+.tg.n{right:auto;left:3cqw;top:3cqw}
+.tg.p + .tg.n{top:calc(3cqw + clamp(15px,8.4cqw,23px))}
+.qb{position:absolute;top:2cqw;right:2cqw;z-index:4;min-width:clamp(18px,10cqw,28px);height:clamp(18px,10cqw,28px);padding:0 4px;box-sizing:border-box;border-radius:999px;background:#e60000;color:#fff;font-weight:800;font-size:clamp(10px,5.6cqw,15px);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);border:2px solid #fff;pointer-events:none}
 </style>
 </head>
 <body>
@@ -465,6 +468,7 @@ function cartao(p){
   return '<div class="card'+(p.ex?' esg':'')+'" id="c'+p.i+'">'+
       (p.ex?'<span class="esgot">ESGOTADO</span>':'')+
       (p.pr?'<span class="tg p">PROMO</span>':'')+(p.nv?'<span class="tg n">NOVO</span>':'')+
+      '<span class="qb" id="qb'+p.i+'"'+(CART[p.i]?'':' style="display:none"')+'>'+(CART[p.i]||0)+'</span>'+
       '<div class="ph" data-fi="'+p.i+'"><span>📦</span></div>'+
       '<div class="nm">'+esc(p.n)+'</div>'+
       '<div class="pr">'+eur(p.p)+'</div>'+
@@ -623,6 +627,7 @@ function muda(id,d){
   const q=Math.max(0,(CART[id]||0)+d);
   if(q) CART[id]=q; else delete CART[id];
   guardaCart();
+  const qb=$('qb'+id); if(qb){ qb.textContent=q; qb.style.display=q?'flex':'none'; }
   const ac=$('ac'+id);
   if(ac) ac.innerHTML=cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'');
   if($('m-cart').classList.contains('on')) desenhaCart();
