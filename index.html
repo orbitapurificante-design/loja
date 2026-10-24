@@ -262,6 +262,16 @@ header:not(.solid) .brand .nome{filter:none}
 .brand .nome{font-size:clamp(18px,5.4vw,26px);position:relative;top:2px}
 .brand .sub{width:auto;margin:0;padding:0;font-size:10px;letter-spacing:1.2px;line-height:1.15;text-align:left;white-space:normal;max-width:52px;position:relative;top:2px}
 .mq .im{aspect-ratio:10/6}
+
+/* v6 */
+.mq .im{aspect-ratio:6/10}
+#marcas{grid-template-columns:repeat(4,1fr)}
+.mq b{font-size:9px}
+.ico.b2b{width:auto;min-width:36px;padding:0 6px;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--acc);border:1.5px solid var(--acc);border-radius:10px;height:30px;align-self:center}
+.ico.b2b:active{background:var(--acc);color:#fff}
+#barra{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 -1px 6px rgba(0,0,0,.12)}
+#barra.filt{background:var(--grn);color:#fff}
+#barra.filt b{color:#fff}
 </style>
 </head>
 <body>
@@ -271,8 +281,9 @@ header:not(.solid) .brand .nome{filter:none}
     <button class="ico" id="b-menu" aria-label="Marcas">☰</button>
     <div class="brand">
       <img id="logo" alt="">
-      <div><span class="nome" id="nome">LOJA</span><span class="sub">LOJA<br>ONLINE</span></div>
+      <div><span class="nome" id="nome">LOJA</span></div>
     </div>
+    <button class="ico b2b" id="b-b2b" aria-label="B2B">B2B</button>
     <button class="ico usr" id="b-user" aria-label="Entrar"><span class="ui">👤</span><span class="ut" id="ut">ENTRAR</span></button>
     <button class="ico" id="b-cart" aria-label="Carrinho">🛒<span class="bd" id="bd">0</span></button>
   </div>
@@ -343,7 +354,7 @@ header:not(.solid) .brand .nome{filter:none}
   <div id="u-perfil" style="display:none"></div>
 </div></div>
 
-<div id="barra"><span>🛒 Ver carrinho</span><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
+<div id="barra"><span id="barra-l">🛒 Ver carrinho</span><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
 <div id="lb"><button id="lb-x" aria-label="Fechar">✕</button><button class="lb-a" id="lb-prev" aria-label="Anterior">‹</button><button class="lb-a" id="lb-next" aria-label="Seguinte">›</button><div id="lb-n"></div><div id="lb-c" style="display:contents"></div></div>
 <div id="print-area"></div>
 <div id="aviso"></div>
@@ -364,7 +375,7 @@ function aviso(t){ const a=$('aviso'); a.textContent=t; a.style.display='block';
 let CFG={nome:'LOJA',wa:'',logo:'',marcas:[],banners:[]};
 let PROD=[], PMAP=new Map(), SUBS=[];
 let CART=LS.get('LOJA_CART',{});
-const F={marca:'',sub:'',promo:false,novo:false,q:'',n:48};
+const F={marca:'',sub:'',promo:false,novo:false,q:'',n:48,cart:false};
 const MAXC=()=>window.innerWidth<700?5:10;
 function colsPadrao(){ const w=window.innerWidth; return w<620?2:w<900?3:w<1200?4:5; }
 let COLS=Math.min(MAXC(),Math.max(1,parseInt(LS.get('LOJA_COLS',0))||colsPadrao()));
@@ -429,6 +440,7 @@ function filtrados(){
   return PROD.filter(p=>{
     if(m && norm(p.m)!==m) return false;
     if(s && p.s!==s && !(!p.s && p.c===s)) return false;
+    if(F.cart && !CART[p.i]) return false;
     if(F.promo && !p.pr) return false;
     if(F.novo && !p.nv) return false;
     if(q && !norm(p.n).includes(q) && !String(p.e).includes(F.q.trim())) return false;
@@ -639,7 +651,13 @@ $('cart-lista').addEventListener('click',e=>{
   if(a) muda(+a,1); else if(m) muda(+m,-1);
 });
 const abreCart=()=>{ desenhaCart(); $('m-cart').classList.add('on'); };
-$('b-cart').onclick=abreCart; $('barra').onclick=abreCart;
+$('b-cart').onclick=abreCart;
+function barraEstado(){ $('barra-l').textContent=F.cart?'✕ Ver todos os produtos':'🛒 Ver carrinho'; $('barra').classList.toggle('filt',F.cart); }
+$('barra').onclick=()=>{
+  if(!F.cart && !Object.keys(CART).length){ aviso('O carrinho está vazio.'); return; }
+  F.cart=!F.cart; F.n=passo(); barraEstado(); desenha(); window.scrollTo({top:0});
+};
+$('b-b2b').onclick=()=>{ if(CFG.b2b) window.open(CFG.b2b,'_blank'); else aviso('Área B2B em breve.'); };
 $('b-limpa').onclick=()=>{ if(!Object.keys(CART).length) return; if(confirm('Limpar o carrinho?')){ CART={}; guardaCart(); desenha(); desenhaCart(); } };
 
 function textoEncomenda(){
@@ -728,7 +746,7 @@ document.querySelectorAll('.modal').forEach(m=>{
 function medeHH(){ document.documentElement.style.setProperty('--hh',document.querySelector('header').offsetHeight+'px'); }
 window.addEventListener('resize',medeHH); window.addEventListener('load',medeHH); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(medeHH); medeHH();
 function limpaFiltros(){
-  F.marca='';F.sub='';F.promo=false;F.novo=false;F.q=''; F.n=passo();
+  F.marca='';F.sub='';F.promo=false;F.novo=false;F.q='';F.cart=false;barraEstado(); F.n=passo();
   $('f-cat').value=''; $('f-q').value=''; $('f-promo').classList.remove('on'); $('f-novo').classList.remove('on');
   desenhaMarcas(); desenha();
 }
@@ -740,7 +758,7 @@ function limpaFiltros(){
     if($('lb').classList.contains('on')){ fechaLB(); return true; }
     const m=document.querySelector('.modal.on'); if(m){ m.classList.remove('on'); return true; }
     if($('gav').classList.contains('on')){ fechaGav(); return true; }
-    if(F.marca||F.sub||F.promo||F.novo||F.q){ limpaFiltros(); window.scrollTo({top:0}); return true; }
+    if(F.marca||F.sub||F.promo||F.novo||F.q||F.cart){ limpaFiltros(); window.scrollTo({top:0}); return true; }
     return false;
   }
   window.addEventListener('popstate',()=>{
