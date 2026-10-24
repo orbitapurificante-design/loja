@@ -283,6 +283,22 @@ header:not(.solid) .brand .nome{filter:none}
 .tabs button b{font-weight:800}
 #off{display:none;text-align:center;font-size:11px;color:#556;padding:3px 8px;background:#fff}
 .np{margin-left:4px}
+.card .ph{cursor:pointer}
+@keyframes pop{0%{box-shadow:0 0 0 0 rgba(10,157,88,.7)}100%{box-shadow:0 0 0 12px rgba(10,157,88,0)}}
+.card.pop{animation:pop .45s ease-out}
+
+.verr{display:none;background:#fdecea;color:#b71c1c;border-radius:9px;padding:8px 10px;font-size:13px;font-weight:700;margin:6px 0}
+#v-cli.bad{border-color:#d32f2f;background:#fff5f5}
+.pt{display:flex;gap:6px;margin-bottom:8px}.pt input{margin:0}.pt .big{margin:0}
+.dh{display:flex;align-items:center;gap:8px;margin:14px 0 6px;padding:7px 10px;background:#1b2330;color:#fff;border-radius:9px;font-size:13px}.dh span{margin-left:auto;font-size:11px;opacity:.85}
+.rs{width:100%;border:1.5px solid var(--acc);background:#fff;color:var(--acc);border-radius:9px;padding:9px;font-weight:800;font-size:12px;cursor:pointer;margin-bottom:6px}.rs.on{background:var(--acc);color:#fff}
+.rd{background:#f4f7fc;border-radius:10px;padding:8px 10px;margin-bottom:8px}
+.rl{display:flex;gap:6px;font-size:13px;padding:3px 0;border-bottom:1px solid #e3e8f0}.rl span{margin-left:auto;font-weight:700}.rl.rt{border:none;font-size:14px}
+.ev{background:#fff7e0;border:1.5px solid #f0c040;border-radius:12px;padding:10px;margin-bottom:10px}
+.evt{font-weight:800;font-size:13px;margin-bottom:8px}.ev label{margin-top:8px}.ev select{width:100%;padding:10px;border:1.5px solid #ccc;border-radius:9px;font-size:14px;background:#fff}
+.ev .ck{display:flex;align-items:center;gap:8px;font-weight:600;font-size:12px}.ev .ck input{width:18px;margin:0}
+.evk{font-weight:800;color:#b71c1c;font-size:12px;margin:8px 0}
+.ev .pdb button.on{background:var(--acc);color:#fff}.ev .pdb button.go{background:var(--grn);color:#fff}
 </style>
 </head>
 <body>
@@ -341,6 +357,7 @@ header:not(.solid) .brand .nome{filter:none}
     <div id="v-edit" class="hint" style="display:none"></div>
     <label>CLIENTE *</label><input type="text" id="v-cli" placeholder="Nome do cliente" autocomplete="off">
     <label>NOTA</label><input type="text" id="v-nota" placeholder="Observações do pedido" autocomplete="off">
+    <div id="v-err" class="verr"></div>
     <button class="big" id="b-guarda">💾 GUARDAR PEDIDO</button>
     <button class="big wa" id="b-wa">📲 ENVIAR POR WHATSAPP</button>
     <button class="big pdf" id="b-pdf">📄 GUARDAR / IMPRIMIR PDF</button>
@@ -648,6 +665,10 @@ $('grelha').addEventListener('click',e=>{
   const a=e.target.closest('[data-a]'), m=e.target.closest('[data-m]');
   if(a) muda(+a.dataset.a, +(a.dataset.n||1));
   else if(m) muda(+m.dataset.m,-1);
+  else{
+    const ph=e.target.closest('.ph');
+    if(ph&&ph.dataset.fi){ const id=+ph.dataset.fi, p=PMAP.get(id); muda(id,1); const c=ph.closest('.card'); if(c&&p&&!p.ex){ c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); } }
+  }
 });
 function linhas(){ return Object.keys(CART).map(id=>PMAP.get(+id)?{p:PMAP.get(+id),q:CART[id]}:null).filter(Boolean).sort((a,b)=>cmp(a.p,b.p)); }
 function total(){ return linhas().reduce((a,l)=>a+l.p.p*l.q,0); }
@@ -684,7 +705,7 @@ $('b-limpa').onclick=()=>{ if(!Object.keys(CART).length) return; if(confirm('Lim
 let VCLI='', VNOTA='', EDIT_ID=null;
 const totalDe=ls=>ls.reduce((a,l)=>a+l.p.p*l.q,0);
 function textoDe(o){
-  let t='*Pedido — '+(CFG.nome||'Vendas')+'*\n'+new Date(o.ts).toLocaleString('pt-PT')+'\n';
+  let t='*'+(o.tit||'Pedido')+' — '+(CFG.nome||'Vendas')+'*\n'+new Date(o.ts).toLocaleString('pt-PT')+'\n';
   if(o.cli) t+='\nCliente: '+o.cli+'\n';
   if(o.nota) t+='Nota: '+o.nota+'\n';
   t+='\n';
@@ -698,7 +719,7 @@ function waDe(o){
   window.open('https://wa.me/'+CFG.wa+'?text='+encodeURIComponent(t),'_blank');
 }
 function pdfDe(o){
-  $('print-area').innerHTML='<h1>'+esc(CFG.nome||'Vendas')+' — Pedido</h1><div>'+new Date(o.ts).toLocaleString('pt-PT')+'</div>'+
+  $('print-area').innerHTML='<h1>'+esc(CFG.nome||'Vendas')+' — '+esc(o.tit||'Pedido')+'</h1>'+'<div>'+new Date(o.ts).toLocaleString('pt-PT')+'</div>'+
     (o.cli?'<div style="margin-top:6px"><b>'+esc(o.cli)+'</b></div>':'')+(o.nota?'<div>Nota: '+esc(o.nota)+'</div>':'')+
     '<table><tr><th>Produto</th><th class="r">Qtd</th><th class="r">Preço</th><th class="r">Total</th></tr>'+
     (()=>{ let g=null; return o.ls.map(l=>{ const f=famDe(l.p); const cab=(f!==g)?'<tr class="fr"><td colspan="4">'+esc(f)+'</td></tr>':''; g=f; return cab+'<tr><td class="ip">'+esc(l.p.n)+'</td><td class="r">'+l.q+'</td><td class="r">'+eur(l.p.p)+'</td><td class="r">'+eur(l.p.p*l.q)+'</td></tr>'; }).join(''); })()+
@@ -720,36 +741,158 @@ function aba(x){
   if(x==='p') desenhaPed(); else { desenhaCart(); estadoEdit(); }
 }
 $('tb-c').onclick=()=>aba('c'); $('tb-p').onclick=()=>aba('p');
-function desenhaPed(){
-  const a=pedidos().slice().sort((x,y)=>y.ts-x.ts);
-  $('v-ped').innerHTML=a.length?a.map(o=>{
-    const n=o.ls.reduce((s,l)=>s+l.q,0);
-    return '<div class="pd"><div class="pdh"><b>'+esc(o.cli||'(sem nome)')+'</b>'+(o.env?' <span class="ok">✅ enviado</span>':'')+'<span>'+new Date(o.ts).toLocaleString('pt-PT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span></div>'+
-      '<div class="pds">'+n+(n===1?' artigo':' artigos')+' · <b>'+eur(totalDe(o.ls))+'</b>'+(o.nota?' · '+esc(o.nota):'')+'</div>'+
-      '<div class="pdb"><button data-pa="ab" data-id="'+o.id+'">✏️ ABRIR</button><button data-pa="wa" data-id="'+o.id+'">📲</button><button data-pa="pdf" data-id="'+o.id+'">📄</button><button data-pa="del" data-id="'+o.id+'">🗑️</button></div></div>';
-  }).join(''):'<p class="hint" style="padding:14px 0">Ainda não há pedidos guardados. Faz o carrinho e carrega em GUARDAR PEDIDO.</p>';
+const isoDe=ts=>{ const d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const diaPT=iso=>{ const [y,m,d]=iso.split('-'); const dt=new Date(+y,+m-1,+d); return ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][dt.getDay()]+' '+d+'/'+m+'/'+y; };
+let PQ='', DIA_ABERTO='';
+function resumoDia(iso,lista){
+  const m=new Map();
+  (lista||pedidos().filter(o=>isoDe(o.ts)===iso)).forEach(o=>o.ls.forEach(l=>{ const k=l.p.i; const e=m.get(k)||{p:l.p,q:0}; e.q+=l.q; m.set(k,e); }));
+  return [...m.values()].sort((a,b)=>cmp(a.p,b.p));
 }
+function desenhaPed(){
+  const q=norm(PQ);
+  const all=pedidos().slice().sort((x,y)=>y.ts-x.ts).filter(o=>!q||norm(o.cli).includes(q));
+  const dias=[...new Set(all.map(o=>isoDe(o.ts)))];
+  let h='<div class="pt"><input type="search" id="pq" placeholder="🔍 Procurar cliente…" value="'+esc(PQ)+'"></div>'+
+        '<div class="pt"><button class="big" id="b-env">📤 ENVIAR ENCOMENDAS</button><button class="big sec" id="b-cfg" style="flex:0 0 52px">⚙️</button></div><div id="v-env"></div>';
+  h+=all.length?dias.map(iso=>{
+    const os=all.filter(o=>isoDe(o.ts)===iso), tot=os.reduce((s,o)=>s+totalDe(o.ls),0);
+    const aberto=DIA_ABERTO===iso, rs=aberto?resumoDia(iso,os):null;
+    let r='';
+    if(aberto){
+      let g=null;
+      r='<div class="rd">'+rs.map(l=>{ const f=famDe(l.p); const c=f!==g?'<div class="cf">'+esc(f)+'</div>':''; g=f; return c+'<div class="rl"><b>'+l.q+'×</b> '+esc(l.p.n)+'<span>'+eur(l.p.p*l.q)+'</span></div>'; }).join('')+
+        '<div class="rl rt"><b>TOTAL</b><span>'+eur(rs.reduce((s,l)=>s+l.p.p*l.q,0))+'</span></div>'+
+        '<div class="pdb"><button data-pa="rwa" data-d="'+iso+'">📲 WhatsApp</button><button data-pa="rpdf" data-d="'+iso+'">📄 PDF</button></div></div>';
+    }
+    return '<div class="dh"><b>'+diaPT(iso)+'</b><span>'+os.length+(os.length===1?' pedido':' pedidos')+' · '+eur(tot)+'</span></div>'+
+      '<button class="rs'+(aberto?' on':'')+'" data-pa="res" data-d="'+iso+'">📦 RESUMO DO DIA '+(aberto?'▲':'▼')+'</button>'+r+
+      os.map(o=>{
+        const n=o.ls.reduce((s,l)=>s+l.q,0);
+        return '<div class="pd"><div class="pdh"><b>'+esc(o.cli||'(sem nome)')+'</b>'+(o.env?' <span class="ok">✅ enviado</span>':'')+'<span>'+new Date(o.ts).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+
+          '<div class="pds">'+n+(n===1?' artigo':' artigos')+' · <b>'+eur(totalDe(o.ls))+'</b>'+(o.nota?' · '+esc(o.nota):'')+'</div>'+
+          '<div class="pdb"><button data-pa="ab" data-id="'+o.id+'">✏️ ABRIR</button><button data-pa="wa" data-id="'+o.id+'">📲</button><button data-pa="pdf" data-id="'+o.id+'">📄</button><button data-pa="del" data-id="'+o.id+'">🗑️</button></div></div>';
+      }).join('');
+  }).join(''):'<p class="hint" style="padding:14px 0">'+(PQ?'Nenhum pedido com esse nome.':'Ainda não há pedidos guardados. Faz o carrinho e carrega em GUARDAR PEDIDO.')+'</p>';
+  $('v-ped').innerHTML=h;
+  if(PQ){ const i=$('pq'); i.focus(); i.setSelectionRange(PQ.length,PQ.length); }
+}
+$('v-ped').addEventListener('input',e=>{ if(e.target.id==='pq'){ PQ=e.target.value; desenhaPed(); } });
 $('v-ped').addEventListener('click',e=>{
+  if(e.target.closest('#b-env')){ painelEnvio(); return; }
+  if(e.target.closest('#b-cfg')){ ligarGit(true); return; }
   const b=e.target.closest('[data-pa]'); if(!b) return;
-  const all=pedidos(), o=all.find(x=>x.id==b.dataset.id); if(!o) return;
   const act=b.dataset.pa;
+  if(act==='res'){ DIA_ABERTO=DIA_ABERTO===b.dataset.d?'':b.dataset.d; desenhaPed(); return; }
+  if(act==='rwa'||act==='rpdf'){
+    const iso=b.dataset.d, ls=resumoDia(iso);
+    const o={ts:new Date(iso+'T12:00:00').getTime(),tit:'Resumo do dia',cli:diaPT(iso),nota:'',ls};
+    if(act==='rwa') waDe(o); else pdfDe(o); return;
+  }
+  const all=pedidos(), o=all.find(x=>x.id==b.dataset.id); if(!o) return;
   if(act==='del'){ if(confirm('Apagar o pedido de "'+(o.cli||'sem nome')+'"?')){ guardaPedidos(all.filter(x=>x.id!==o.id)); desenhaPed(); } }
-  else if(act==='wa'){ waDe(o); o.env=1; guardaPedidos(all); desenhaPed(); }
-  else if(act==='pdf'){ pdfDe(o); o.env=1; guardaPedidos(all); }
+  else if(act==='wa'){ waDe(o); }
+  else if(act==='pdf'){ pdfDe(o); }
   else if(act==='ab'){
     if(Object.keys(CART).length && !confirm('O carrinho atual será substituído pelo pedido de "'+(o.cli||'sem nome')+'". Continuar?')) return;
     CART={}; o.ls.forEach(l=>{ CART[l.p.i]=l.q; PMAP.has(l.p.i)||PMAP.set(l.p.i,l.p); });
     VCLI=o.cli||''; VNOTA=o.nota||''; EDIT_ID=o.id; guardaCart(); desenha(); aba('c');
   }
 });
+
+/* ───────────── enviar encomendas para o tablet de separação (GitHub) ───────────── */
+const GH={owner:'orbitapurificante-design',repo:'DUMELHOR',branch:'dados-encomendas',pasta:'DUMELHOR/encomendas'};
+const slug=t=>String(t||'vendedor').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'vendedor';
+function dispositivo(){ let d=LS.get('VENDAS_DEV',''); if(!d){ d='V'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); LS.set('VENDAS_DEV',d); } return d; }
+function ligarGit(forca){
+  let v=LS.get('VENDAS_VEND',''), t=LS.get('VENDAS_TOKEN','');
+  if(forca||!v){ const r=prompt('Nome do vendedor (aparece nas encomendas):',v); if(r===null) return false; v=r.trim(); LS.set('VENDAS_VEND',v); }
+  if(forca||!t){ const r=prompt('Cola aqui a chave do GitHub (github_pat_…).\nFica guardada só neste telemóvel.\nPara desligar, apaga o texto.',t); if(r===null) return false; t=r.trim(); LS.set('VENDAS_TOKEN',t); }
+  if(forca) aviso(t?'✅ Chave guardada.':'Chave removida.');
+  return !!(v&&t);
+}
+function painelEnvio(){
+  const e=$('v-env'); if(e.innerHTML){ e.innerHTML=''; return; }
+  const clis=[...new Set(pedidos().map(o=>o.cli).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  e.innerHTML='<div class="ev"><div class="evt">📤 ENVIAR ENCOMENDAS</div>'+
+    '<div class="pdb"><button id="ev-h" class="on">HOJE</button><button id="ev-t">TODAS AS DATAS</button></div>'+
+    '<label>Cliente</label><select id="ev-c"><option value="">TODOS OS CLIENTES</option>'+clis.map(c=>'<option>'+esc(c)+'</option>').join('')+'</select>'+
+    '<label class="ck"><input type="checkbox" id="ev-n"> Só as que ainda não foram enviadas</label>'+
+    '<div id="ev-k" class="evk"></div>'+
+    '<div class="pdb"><button id="ev-x">CANCELAR</button><button id="ev-ok" class="go">ENVIAR</button></div></div>';
+  let modo='h';
+  const lista=()=>{ const c=$('ev-c').value, n=$('ev-n').checked, hoje=isoDe(Date.now());
+    return pedidos().filter(o=>(modo==='t'||isoDe(o.ts)===hoje)&&(!c||o.cli===c)&&(!n||!o.env)); };
+  const cont=()=>{ $('ev-k').textContent=lista().length+' encomenda(s) serão enviadas'; };
+  $('ev-h').onclick=()=>{ modo='h'; $('ev-h').classList.add('on'); $('ev-t').classList.remove('on'); cont(); };
+  $('ev-t').onclick=()=>{ modo='t'; $('ev-t').classList.add('on'); $('ev-h').classList.remove('on'); cont(); };
+  $('ev-c').onchange=cont; $('ev-n').onchange=cont; cont();
+  $('ev-x').onclick=()=>{ e.innerHTML=''; };
+  $('ev-ok').onclick=()=>enviarEnc(lista());
+}
+async function ghPut(path,obj,msg,token){
+  const H={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'};
+  const base='https://api.github.com/repos/'+GH.owner+'/'+GH.repo;
+  const r=await fetch(base+'/branches/'+GH.branch,{headers:H});
+  if(!r.ok){
+    const m=await fetch(base+'/git/ref/heads/main',{headers:H}); if(!m.ok) throw new Error('Sem acesso ao repositório DUMELHOR ('+m.status+'). A chave tem de incluir esse repositório.');
+    const sha=(await m.json()).object.sha;
+    const c=await fetch(base+'/git/refs',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify({ref:'refs/heads/'+GH.branch,sha})});
+    if(!c.ok&&c.status!==422) throw new Error('Não consegui criar o ramo de dados ('+c.status+').');
+  }
+  const url=base+'/contents/'+GH.pasta+'/'+path, b64=btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+  let err;
+  for(let t=1;t<=3;t++){
+    try{
+      let sha; const g=await fetch(url+'?ref='+GH.branch,{headers:H}); if(g.ok) sha=(await g.json()).sha;
+      const p=await fetch(url,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify(Object.assign({message:msg,content:b64,branch:GH.branch},sha?{sha}:{}))});
+      if(p.ok) return true;
+      const j=await p.json().catch(()=>({})); err=new Error('GitHub ('+p.status+'): '+(j.message||'falha'));
+    }catch(x){ err=x; }
+    if(t<3) await new Promise(r=>setTimeout(r,1200*t));
+  }
+  throw err;
+}
+async function enviarEnc(lista){
+  if(!lista.length) return aviso('Não há encomendas com esse filtro.');
+  if(!ligarGit(false)) return aviso('Falta o nome do vendedor e a chave do GitHub (⚙️).');
+  const vend=LS.get('VENDAS_VEND',''), token=LS.get('VENDAS_TOKEN','');
+  const btn=$('ev-ok'); if(btn){ btn.disabled=true; btn.textContent='A enviar…'; }
+  const encomendas=lista.map(o=>({
+    id:o.id, data:new Date(o.ts).toLocaleString('pt-PT'), dataISO:isoDe(o.ts), obs:o.nota||'', nota:'',
+    cliente:{num:'V-'+slug(o.cli), nome:o.cli||'Sem nome'},
+    itens:o.ls.map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))
+  }));
+  const dev=dispositivo();
+  const gerais=[...new Set(lista.map(o=>isoDe(o.ts)))].map(iso=>{
+    const rs=resumoDia(iso); // resumo do dia = todos os pedidos guardados desse dia
+    return {uid:'G-'+dev+'-'+iso,dia:iso,vendedor:vend,fontes:[],obs:'',notas:'',itens:rs.map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))};
+  });
+  const pacote={tipo:'dumelhor_encomendas',versao:2,vendedor:vend,dataEnvio:new Date().toISOString(),encomendas,gerais,fotos:{}};
+  const nomeF='dumelhor-encomendas-vendas-'+slug(vend)+'-'+isoDe(Date.now())+'.json';
+  let ok=false, erro='';
+  try{ await ghPut(slug(vend)+'-vendas.json',pacote,'Encomendas (vendas) de '+vend+' — '+new Date().toLocaleString('pt-PT'),token); ok=true; }
+  catch(x){ erro=(x&&x.message)||String(x); if(!navigator.onLine) erro='Sem internet'; }
+  if(ok){
+    const all=pedidos(); const ids=new Set(lista.map(o=>o.id)); all.forEach(o=>{ if(ids.has(o.id)) o.env=1; }); guardaPedidos(all);
+    aviso('✅ '+encomendas.length+' encomenda(s) enviada(s) para o tablet de separação.');
+  }else{
+    try{ const bl=new Blob([JSON.stringify(pacote)],{type:'application/json'}), u=URL.createObjectURL(bl), a=document.createElement('a'); a.href=u; a.download=nomeF; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),2000); }catch(x){}
+    alert('⚠️ Não consegui enviar automaticamente ('+erro+').\n\nGuardei o ficheiro '+nomeF+' no telemóvel. Quando tiveres internet, volta a carregar em ENVIAR (os pedidos continuam guardados).');
+  }
+  desenhaPed();
+}
+
 function estadoEdit(){
   $('v-cli').value=VCLI; $('v-nota').value=VNOTA;
   const e=$('v-edit'); if(EDIT_ID){ e.style.display='block'; e.innerHTML='✏️ A editar um pedido guardado. <b>GUARDAR</b> atualiza-o.'; } else e.style.display='none';
 }
-$('b-guarda').onclick=()=>{
+function erroCli(t){ const e=$('v-err'); e.textContent=t; e.style.display='block'; $('v-cli').classList.add('bad'); $('v-cli').focus(); $('v-cli').scrollIntoView({block:'center',behavior:'smooth'}); aviso(t); }
+$('v-cli').addEventListener('input',()=>{ $('v-err').style.display='none'; $('v-cli').classList.remove('bad'); });
+$('b-guarda').onclick=()=>{ $('v-err').style.display='none'; $('v-cli').classList.remove('bad');
   const o=atual(); if(!o.ls.length) return aviso('O carrinho está vazio.');
-  if(!o.cli){ aviso('Escreve o nome do cliente.'); $('v-cli').focus(); return; }
-  const reg={id:EDIT_ID||Date.now(),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u}}))};
+  if(!o.cli){ erroCli('Escreve o nome do cliente para guardar o pedido.'); return; }
+  const reg={id:EDIT_ID||Date.now(),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u}}))};
   const all=pedidos().filter(x=>x.id!==reg.id); all.push(reg); guardaPedidos(all);
   CART={}; VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); desenha(); aba('p'); aviso('Pedido guardado ✅');
 };
