@@ -305,6 +305,19 @@ header:not(.solid) .brand .nome{filter:none}
 #barra{gap:8px}
 #barra #b-fam{margin:0 auto;border:1.5px solid var(--acc);background:#fff;color:var(--acc);border-radius:14px;padding:3px 9px;font-size:10.5px;font-weight:800;white-space:nowrap;cursor:pointer}
 #barra.filt #b-fam{border-color:#fff;background:transparent;color:#fff}
+
+.sq{position:relative;flex:1.4 1 0;display:flex;min-width:0}
+.sq input[type=search]{width:100%;flex:1;padding-right:24px}
+#f-qx{display:none;position:absolute;right:3px;top:50%;transform:translateY(-50%);width:20px;height:20px;border:none;border-radius:50%;background:#c9ced8;color:#fff;font-size:11px;line-height:20px;padding:0;cursor:pointer}
+#f-qx.has{display:block}
+.cbtn{flex:1 1 0;min-width:92px;max-width:150px;height:26px;border:1px solid #e1e5eb;border-radius:13px;background:transparent;color:var(--ink);font-size:11px;font-weight:500;text-align:left;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cbtn.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+@media(min-width:700px){.cbtn{max-width:280px;font-size:13px}}
+#c-q{margin-bottom:8px}
+#c-list{display:flex;flex-direction:column;gap:5px}
+.c0{border:1px solid #e1e5eb;background:#fff;border-radius:10px;padding:11px 12px;text-align:left;font-size:14px;font-weight:600;cursor:pointer}
+.c0.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.c0.todas{background:#eef2f8;color:#b71c1c}.c0.todas.on{background:#eef2f8;color:#b71c1c;border-color:#b71c1c}
 </style>
 </head>
 <body>
@@ -331,10 +344,10 @@ header:not(.solid) .brand .nome{filter:none}
 </div>
 
 <div class="filtros" id="fbar"><div class="in">
-  <select id="f-cat"><option value="">Categorias</option></select>
+  <select id="f-cat" style="display:none"><option value="">Categorias</option></select><button type="button" class="cbtn" id="f-catb">Categorias ▾</button>
   <button class="chip" id="f-promo">🔥PROMOÇÕES</button>
   <button class="chip nv" id="f-novo">✨NOVIDADES</button>
-  <input type="search" id="f-q" placeholder="🔍 Pesquisar…">
+  <span class="sq"><input type="search" id="f-q" placeholder="🔍 Pesquisar…" autocomplete="off"><button type="button" id="f-qx" aria-label="Limpar pesquisa">✕</button></span>
 </div></div>
 
 <div id="off"></div>
@@ -395,6 +408,12 @@ header:not(.solid) .brand .nome{filter:none}
     <p class="hint">A conta fica guardada neste telemóvel. Serve para preencher os teus dados nas encomendas.</p>
   </div>
   <div id="u-perfil" style="display:none"></div>
+</div></div>
+
+<div class="modal" id="m-cat"><div class="sheet">
+  <h2><span>Categorias</span><button data-fecha>✕</button></h2>
+  <input type="search" id="c-q" placeholder="🔍 Procurar categoria…" autocomplete="off">
+  <div id="c-list"></div>
 </div></div>
 
 <div id="barra"><span id="barra-l">🛒 Ver carrinho</span><button id="b-fam" type="button">▲ Fechar famílias</button><span><b id="barra-n">0 artigos</b> · <b id="barra-t">0,00 €</b></span></div>
@@ -526,8 +545,11 @@ function cartaoQt(p){
 }
 const FECH=new Set(); // famílias fechadas (setas)
 function famDe(p){ return String(p.c||'').trim()||'OUTROS'; }
-const cmp=(a,b)=>famDe(a).localeCompare(famDe(b),'pt')||String(a.s||'').localeCompare(String(b.s||''),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true});
-const cmpNome=(a,b)=>famDe(a).localeCompare(famDe(b),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true,sensitivity:'base'}); // grelha: família → nome (A–Z)
+const GORD=['ALIMENTAR','ANIMAIS','CASA','HIGIENE'];
+function gRank(p){ const g=String(p.g||'').trim().toUpperCase(); if(!g) return 999; const i=GORD.indexOf(g); return i>=0?i:100; }
+const cmpG=(a,b)=>gRank(a)-gRank(b)||String(a.g||'').toUpperCase().localeCompare(String(b.g||'').toUpperCase(),'pt');
+const cmp=(a,b)=>cmpG(a,b)||famDe(a).localeCompare(famDe(b),'pt')||String(a.s||'').localeCompare(String(b.s||''),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true});
+const cmpNome=(a,b)=>cmpG(a,b)||famDe(a).localeCompare(famDe(b),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true,sensitivity:'base'}); // grelha: família → nome (A–Z)
 function cartao(p){
   return '<div class="card'+(p.ex?' esg':'')+'" id="c'+p.i+'">'+
       (p.ex?'<span class="esgot">ESGOTADO</span>':'')+
@@ -540,7 +562,7 @@ function cartao(p){
     '</div>';
 }
 function desenha(){ desenha0(); setFamBtn(); }
-function setFamBtn(){ const fams=[...new Set(filtrados().map(famDe))]; const b=$('b-fam'); if(b) b.textContent=(fams.length&&fams.every(f=>FECH.has(f)))?'▼ Abrir famílias':'▲ Fechar famílias'; }
+function setFamBtn(){ sincFiltros(); const fams=[...new Set(filtrados().map(famDe))]; const b=$('b-fam'); if(b) b.textContent=(fams.length&&fams.every(f=>FECH.has(f)))?'▼ Abrir famílias':'▲ Fechar famílias'; }
 $('b-fam').onclick=e=>{ e.stopPropagation(); const fams=[...new Set(filtrados().map(famDe))]; if(fams.every(f=>FECH.has(f))) FECH.clear(); else fams.forEach(f=>FECH.add(f)); desenha(); };
 function desenha0(){
   const lista=filtrados().sort(cmp);
@@ -580,7 +602,17 @@ $('ativos').addEventListener('click',e=>{
 $('f-cat').onchange=e=>{ F.sub=e.target.value; F.n=passo(); desenha(); };
 $('f-promo').onclick=e=>{ F.promo=!F.promo; e.currentTarget.classList.toggle('on',F.promo); F.n=passo(); desenha(); };
 $('f-novo').onclick=e=>{ F.novo=!F.novo; e.currentTarget.classList.toggle('on',F.novo); F.n=passo(); desenha(); };
-let tq; $('f-q').oninput=e=>{ clearTimeout(tq); tq=setTimeout(()=>{ F.q=e.target.value; F.n=passo(); desenha(); },180); };
+let tq; $('f-q').oninput=e=>{ $('f-qx').classList.toggle('has',!!e.target.value); clearTimeout(tq); tq=setTimeout(()=>{ F.q=e.target.value; F.n=passo(); desenha(); },180); };
+$('f-qx').onclick=()=>{ clearTimeout(tq); $('f-q').value=''; F.q=''; $('f-qx').classList.remove('has'); F.n=passo(); desenha(); $('f-q').focus(); };
+function listaCat(){
+  const q=norm($('c-q').value), its=SUBS.filter(x=>!q||norm(x).includes(q));
+  $('c-list').innerHTML='<button class="c0 todas'+(F.sub?'':' on')+'" data-c="">✕ TODAS (sem categoria)</button>'+
+    (its.length?its.map(x=>'<button class="c0'+(F.sub===x?' on':'')+'" data-c="'+esc(x)+'">'+esc(x)+'</button>').join(''):'<p class="hint" style="padding:10px 0">Nenhuma categoria com esse nome.</p>');
+}
+$('f-catb').onclick=()=>{ $('c-q').value=''; listaCat(); $('m-cat').classList.add('on'); setTimeout(()=>$('c-q').focus(),60); };
+$('c-q').oninput=listaCat;
+$('c-list').addEventListener('click',e=>{ const b=e.target.closest('[data-c]'); if(!b) return; F.sub=b.dataset.c; $('f-cat').value=F.sub; $('m-cat').classList.remove('on'); F.n=passo(); desenha(); window.scrollTo({top:0}); });
+function sincFiltros(){ $('f-qx').classList.toggle('has',!!$('f-q').value); const b=$('f-catb'); b.textContent=(F.sub||'Categorias')+' ▾'; b.classList.toggle('on',!!F.sub); }
 $('mais').onclick=()=>{ F.n+=passo(); desenha(); };
 
 /* ───────────── produtos por linha: botões + / − e pinça com os dedos ───────────── */
@@ -999,7 +1031,7 @@ function medeHH(){ document.documentElement.style.setProperty('--hh',document.qu
 window.addEventListener('resize',medeHH); window.addEventListener('load',medeHH); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(medeHH); medeHH();
 function limpaFiltros(){
   F.marca='';F.sub='';F.promo=false;F.novo=false;F.q='';F.cart=false;barraEstado(); F.n=passo();
-  $('f-cat').value=''; $('f-q').value=''; $('f-promo').classList.remove('on'); $('f-novo').classList.remove('on');
+  $('f-cat').value=''; $('f-q').value=''; $('f-qx').classList.remove('has'); $('f-promo').classList.remove('on'); $('f-novo').classList.remove('on');
   desenhaMarcas(); desenha();
 }
 /* botão "voltar" do Android: fecha o que estiver aberto, limpa filtros e só depois sai (2 toques) */
