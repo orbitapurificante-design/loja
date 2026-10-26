@@ -374,6 +374,10 @@ header:not(.solid) .brand .nome{filter:none}
 .card .ped{display:flex;align-items:center;justify-content:center;gap:3px}
 .card .ep,.ci .ep{width:6.2em;box-sizing:border-box;border:1.5px solid #b9c4d8;border-radius:8px;padding:4px 6px;text-align:center;font:inherit;font-weight:700;color:var(--red);background:#f7faff;font-size:inherit}
 .ci .er{display:flex;align-items:center;gap:4px;font-size:13px}.ci .ep{font-size:14px;width:5.4em}
+
+.sortk{position:absolute;left:2cqw;top:calc(100cqw - 8cqw);z-index:4;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.9);border-radius:8px;padding:1px 6px 1px 3px;font-size:clamp(8px,4.4cqw,11px);font-weight:700;color:#1b2330;box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:pointer}
+.sortk input{width:clamp(11px,5cqw,14px);height:clamp(11px,5cqw,14px);margin:0}
+.rn{font-size:12px;color:#334;padding:6px 0 2px}
 </style>
 </head>
 <body>
@@ -619,7 +623,7 @@ function cartao(p){
         ? '<div class="nm ned"><input class="en" data-en="'+p.i+'" value="'+esc(p.n)+'" aria-label="Nome do produto"></div><div class="pr ped"><input class="ep" data-ep="'+p.i+'" inputmode="decimal" value="'+String(Math.round(p.p*100)/100).replace('.',',')+'" aria-label="Preço"> €</div>'
         : '<div class="nm">'+esc(p.n)+'</div><div class="pr">'+eur(p.p)+'</div>')+
       '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
-      (F.cart&&CART[p.i]?'<div class="ed"><button data-so="'+p.i+'">+ Sortido</button></div>':'')+
+      (F.cart&&CART[p.i]?'<label class="sortk"><input type="checkbox" data-sk="'+p.i+'"'+(/\s*sortido\s*$/i.test(p.n)?' checked':'')+'> Sortido</label>':'')+
     '</div>';
 }
 function desenha(){ desenha0(); setFamBtn(); }
@@ -817,6 +821,15 @@ function editaLinha(id){
   if(Object.keys(o).length) OVR[id]=o; else delete OVR[id];
   guardaOvr(); refresca();
 }
+function sortidoSet(id,on){
+  const base=PMAP.get(id); if(!base) return; const e=ef(base);
+  const limpo=e.n.replace(/\s*\(?sortido\)?\s*$/i,'').trim();
+  const o=Object.assign({},OVR[id]||{});
+  const nome=on?limpo+' Sortido':limpo;
+  if(nome!==base.n) o.n=nome; else delete o.n;
+  if(Object.keys(o).length) OVR[id]=o; else delete OVR[id];
+  guardaOvr(); refresca();
+}
 function sortido(id){
   const base=PMAP.get(id); if(!base) return; const e=ef(base);
   OVR[id]=Object.assign({},OVR[id]||{},{n:e.n.replace(/\s*\(?sortido\)?\s*$/i,'').trim()+' Sortido'});
@@ -831,7 +844,7 @@ function desenhaCart(){
     const u=foto(l.p), f=famDe(l.p);
     const cab=(f!==_f)?'<div class="cf">'+esc(f)+'</div>':''; _f=f;
     return cab+'<div class="ci ind">'+(u?'<img alt="" src="'+u+'">':'<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">')+
-      '<div class="t">'+(l.p.ex?'<b style="color:#c00;font-size:10px">ESGOTADO </b>':'')+'<input class="en" data-en="'+l.p.i+'" value="'+esc(l.p.n)+'" aria-label="Nome do produto"><small class="er"><input class="ep" data-ep="'+l.p.i+'" inputmode="decimal" value="'+String(Math.round(l.p.p*100)/100).replace('.',',')+'" aria-label="Preço"> € × '+l.q+' = <b data-sm="'+l.p.i+'">'+eur(l.p.p*l.q)+'</b></small><div class="ed"><button data-so="'+l.p.i+'">+ Sortido</button></div></div>'+
+      '<div class="t">'+esc(l.p.n)+(l.p.ex?' <b style="color:#c00;font-size:10px">ESGOTADO</b>':'')+'<small>'+eur(l.p.p)+' × '+l.q+' = <b>'+eur(l.p.p*l.q)+'</b></small></div>'+
       '<div class="qt"><button data-cm="'+l.p.i+'">−</button><b>'+l.q+'</b><button data-ca="'+l.p.i+'">+</button></div></div>';
   }).join(''):'<p class="hint" style="padding:14px 0">O carrinho está vazio.</p>';
   $('cart-total').textContent=eur(total());
@@ -861,7 +874,7 @@ const totalDe=ls=>ls.reduce((a,l)=>a+l.p.p*l.q,0);
 function textoDe(o){
   let t='*'+(o.tit||'Pedido')+' — '+(CFG.nome||'Vendas')+'*\n'+new Date(o.ts).toLocaleString('pt-PT')+'\n';
   if(o.cli) t+='\nCliente: '+o.cli+'\n';
-  if(o.nota) t+='Nota: '+o.nota+'\n';
+  if(o.nota) t+='Notas: '+o.nota+'\n';
   t+='\n';
   let _g=null;
   o.ls.forEach(l=>{ const f=famDe(l.p); if(f!==_g){ t+=(_g===null?'':'\n')+'*'+f+'*\n'; _g=f; } t+='   '+l.q+'x '+l.p.n+' — '+eur(l.p.p*l.q)+'\n'; });
@@ -874,7 +887,7 @@ function waDe(o){
 }
 function pdfDe(o){
   $('print-area').innerHTML='<h1>'+esc(CFG.nome||'Vendas')+' — '+esc(o.tit||'Pedido')+'</h1>'+'<div>'+new Date(o.ts).toLocaleString('pt-PT')+'</div>'+
-    (o.cli?'<div style="margin-top:6px"><b>'+esc(o.cli)+'</b></div>':'')+(o.nota?'<div>Nota: '+esc(o.nota)+'</div>':'')+
+    (o.cli?'<div style="margin-top:6px"><b>'+esc(o.cli)+'</b></div>':'')+(o.nota?'<div style="margin-top:4px"><b>Notas:</b><br>'+esc(o.nota).replace(/\n/g,'<br>')+'</div>':'')+
     '<table><tr><th>Produto</th><th class="r">Qtd</th><th class="r">Preço</th><th class="r">Total</th></tr>'+
     (()=>{ let g=null; return o.ls.map(l=>{ const f=famDe(l.p); const cab=(f!==g)?'<tr class="fr"><td colspan="4">'+esc(f)+'</td></tr>':''; g=f; return cab+'<tr><td class="ip">'+esc(l.p.n)+'</td><td class="r">'+l.q+'</td><td class="r">'+eur(l.p.p)+'</td><td class="r">'+eur(l.p.p*l.q)+'</td></tr>'; }).join(''); })()+
     '<tr><td colspan="3" class="r"><b>TOTAL</b></td><td class="r"><b>'+eur(totalDe(o.ls))+'</b></td></tr></table>';
@@ -897,6 +910,7 @@ $('tb-c').onclick=()=>aba('c'); $('tb-p').onclick=()=>aba('p');
 const isoDe=ts=>{ const d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const diaPT=iso=>{ const [y,m,d]=iso.split('-'); const dt=new Date(+y,+m-1,+d); return ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][dt.getDay()]+' '+d+'/'+m+'/'+y; };
 let PQ='', DIA_ABERTO='';
+function notasDia(iso){ return fundirNotas(pedidos().filter(o=>isoDe(o.ts)===iso).map(o=>({cli:o.cli,texto:o.nota}))); }
 function resumoDia(iso,lista){
   const m=new Map();
   (lista||pedidos().filter(o=>isoDe(o.ts)===iso)).forEach(o=>o.ls.forEach(l=>{ const k=l.p.i; const e=m.get(k)||{p:l.p,q:0}; e.q+=l.q; m.set(k,e); }));
@@ -916,6 +930,7 @@ function desenhaPed(){
       let g=null;
       r='<div class="rd">'+rs.map(l=>{ const f=famDe(l.p); const c=f!==g?'<div class="cf">'+esc(f)+'</div>':''; g=f; return c+'<div class="rl"><b>'+l.q+'×</b> '+esc(l.p.n)+'<span>'+eur(l.p.p*l.q)+'</span></div>'; }).join('')+
         '<div class="rl rt"><b>TOTAL</b><span>'+eur(rs.reduce((s,l)=>s+l.p.p*l.q,0))+'</span></div>'+
+        (notasDia(iso)?'<div class="rn"><b>📝 NOTAS</b><br>'+esc(notasDia(iso)).replace(/\n/g,'<br>')+'</div>':'')+
         '<div class="pdb"><button data-pa="rpdf" data-d="'+iso+'">📄 PDF</button></div></div>';
     }
     return '<div class="dh"><b>'+diaPT(iso)+'</b><span>'+os.length+(os.length===1?' pedido':' pedidos')+' · '+eur(tot)+'</span></div>'+
@@ -939,7 +954,7 @@ $('v-ped').addEventListener('click',e=>{
   if(act==='res'){ DIA_ABERTO=DIA_ABERTO===b.dataset.d?'':b.dataset.d; desenhaPed(); return; }
   if(act==='rpdf'){
     const iso=b.dataset.d, ls=resumoDia(iso);
-    const o={ts:new Date(iso+'T12:00:00').getTime(),tit:'Resumo do dia',cli:diaPT(iso),nota:'',ls};
+    const o={ts:new Date(iso+'T12:00:00').getTime(),tit:'Resumo do dia',cli:diaPT(iso),nota:notasDia(iso),ls};
     pdfDe(o); return;
   }
   const all=pedidos(), o=all.find(x=>x.id==b.dataset.id); if(!o) return;
@@ -1005,20 +1020,32 @@ async function ghPut(path,obj,msg,token){
   }
   throw err;
 }
+function outrosTxt(o){ return o.ls.filter(l=>l.p.man).map(l=>l.q+'x '+l.p.n).join('\n'); }
+function fundirNotas(entradas){
+  const somas=new Map(), livres=[];
+  entradas.forEach(({cli,texto})=>{
+    String(texto||'').split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{
+      const m=l.match(/^(\d+)x\s+(.+)$/i);
+      if(m){ const k=m[2].toLowerCase(); const ex=somas.get(k)||{desc:m[2],q:0}; ex.q+=parseInt(m[1]); somas.set(k,ex); }
+      else{ const li=cli?'['+cli+'] '+l:l; if(!livres.includes(li)) livres.push(li); }
+    });
+  });
+  return [...somas.values()].map(x=>x.q+'x '+x.desc).concat(livres).join('\n');
+}
 async function enviarEnc(lista){
   if(!lista.length) return aviso('Não há encomendas com esse filtro.');
   if(!ligarGit(false)) return aviso('Falta o nome do vendedor e a chave do GitHub (⚙️).');
   const vend=LS.get('VENDAS_VEND',''), token=LS.get('VENDAS_TOKEN','');
   const btn=$('ev-ok'); if(btn){ btn.disabled=true; btn.textContent='A enviar…'; }
   const encomendas=lista.map(o=>({
-    id:o.id, data:new Date(o.ts).toLocaleString('pt-PT'), dataISO:isoDe(o.ts), obs:o.nota||'', nota:'',
+    id:o.id, data:new Date(o.ts).toLocaleString('pt-PT'), dataISO:isoDe(o.ts), obs:outrosTxt(o), nota:o.nota||'',
     cliente:{num:'V-'+slug(o.cli), nome:o.cli||'Sem nome'},
-    itens:o.ls.map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))
+    itens:o.ls.filter(l=>!l.p.man).map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))
   }));
   const dev=dispositivo();
   const gerais=[...new Set(lista.map(o=>isoDe(o.ts)))].map(iso=>{
-    const rs=resumoDia(iso); // resumo do dia = todos os pedidos guardados desse dia
-    return {uid:'G-'+dev+'-'+iso,dia:iso,vendedor:vend,fontes:[],obs:'',notas:'',itens:rs.map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))};
+    const rs=resumoDia(iso).filter(l=>!l.p.man), dia=pedidos().filter(o=>isoDe(o.ts)===iso); // resumo do dia = todos os pedidos guardados desse dia
+    return {uid:'G-'+dev+'-'+iso,dia:iso,vendedor:vend,fontes:[],obs:fundirNotas(dia.map(o=>({cli:o.cli,texto:outrosTxt(o)}))),notas:fundirNotas(dia.map(o=>({cli:o.cli,texto:o.nota}))),itens:rs.map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))};
   });
   const pacote={tipo:'dumelhor_encomendas',versao:2,vendedor:vend,dataEnvio:new Date().toISOString(),encomendas,gerais,fotos:{}};
   const nomeF='dumelhor-encomendas-vendas-'+slug(vend)+'-'+isoDe(Date.now())+'.json';
@@ -1050,7 +1077,7 @@ $('v-cli').addEventListener('input',()=>{ $('v-err').style.display='none'; $('v-
 function guardar(novo){ $('v-err').style.display='none'; $('v-cli').classList.remove('bad');
   const o=atual(); if(!o.ls.length) return aviso('O carrinho está vazio.');
   if(!o.cli){ erroCli('Escreve o nome do cliente para guardar o pedido.'); return; }
-  const reg={id:(EDIT_ID&&!novo)?EDIT_ID:Date.now()+Math.floor(Math.random()*1000),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u}}))};
+  const reg={id:(EDIT_ID&&!novo)?EDIT_ID:Date.now()+Math.floor(Math.random()*1000),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u,man:l.p.man?1:0}}))};
   const all=pedidos().filter(x=>x.id!==reg.id); all.push(reg); guardaPedidos(all);
   CART={}; OVR={}; guardaOvr(); VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); if(F.q) limpaPesq(); else desenha(); aba('p'); aviso('Pedido guardado ✅ ('+pedidos().length+' guardados)');
 }
@@ -1204,6 +1231,7 @@ function aplicaEdit(inp){
   const el=$(i);
   el.addEventListener('change',e=>{ if(e.target.matches('[data-en],[data-ep]')) aplicaEdit(e.target); });
   el.addEventListener('focusin',e=>{ if(e.target.matches('.ep')) setTimeout(()=>{ try{ e.target.select(); }catch(x){} },0); });
+  el.addEventListener('change',e=>{ if(e.target.matches('[data-sk]')) sortidoSet(+e.target.dataset.sk,e.target.checked); });
   el.addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.matches('[data-en],[data-ep]')) e.target.blur(); });
 });
 /* ───────────── manter o dedo no − / + : repete e acelera ───────────── */
