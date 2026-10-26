@@ -349,6 +349,24 @@ header:not(.solid) .brand .nome{filter:none}
 .ob input{width:100%;padding:12px;border:1.5px solid #ccc;border-radius:10px;font-size:16px;margin-bottom:8px;background:#fff}
 .ob .or{display:flex;gap:8px}.ob .or input{flex:1;min-width:0}
 .ob .big{margin:0}
+
+/* v13 */
+.brand .nome{display:block;flex:0 0 auto;font-size:clamp(14px,4.4vw,22px);line-height:1}
+.brand .sq{flex:1 1 56px;min-width:56px}
+.brand .sq input[type=search]{font-size:15px;padding:0 8px;height:34px}
+.brand .sq input[type=search]:not(:placeholder-shown){padding-left:30px}
+.sq #f-qx{width:22px;height:22px;line-height:22px;font-size:12px}
+.ico .bd{min-width:17px;padding:0 4px;font-size:10px;white-space:nowrap;top:-5px;right:-8px}
+.ico .bd.big3{font-size:9.5px;padding:0 5px}
+#fbar .cbtn{flex:0 0 auto;min-width:0;max-width:none;padding:0 6px;font-size:11.5px}
+#fbar .chip{padding:0 5px;font-size:10.5px}
+#fbar .in{gap:2px}
+#fbar #colbar span{display:block;font-size:8.5px;line-height:1.05;font-weight:700;text-align:right;opacity:.95;margin-right:2px}
+
+.ed{display:flex;gap:6px;margin-top:5px}
+.ed button{flex:1;border:1px solid #cfd6e3;background:#f4f7fc;color:#1b2330;border-radius:8px;padding:5px 4px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.card .ed{padding:0 6px 8px}
+#barra>span{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -358,8 +376,8 @@ header:not(.solid) .brand .nome{filter:none}
     <button class="ico" id="b-menu" aria-label="Marcas">☰</button>
     <div class="brand">
       <img id="logo" alt="">
-      <span class="nome" id="nome" style="display:none">LOJA</span>
-      <span class="sq"><input type="search" id="f-q" placeholder="Pesquisar produto…" autocomplete="off"><button type="button" id="f-qx" aria-label="Limpar pesquisa">✕</button></span>
+      <span class="nome" id="nome">LOJA</span>
+      <span class="sq"><input type="search" id="f-q" placeholder="Pesquisar…" autocomplete="off"><button type="button" id="f-qx" aria-label="Limpar pesquisa">✕</button></span>
     </div>
     <button class="ico b2b" id="b-b2b" aria-label="Pedidos">PEDIDOS<span class="np" id="np0"></span></button>
     <button class="ico usr" id="b-user" style="display:none" aria-label="Entrar"><span class="ui">👤</span><span class="ut" id="ut">ENTRAR</span></button>
@@ -385,7 +403,7 @@ header:not(.solid) .brand .nome{filter:none}
 <div id="off"></div>
 <div id="ativos"></div>
 
-<div id="colbar"><span>Produtos por linha</span><button id="c-menos" aria-label="Menos produtos por linha">−</button><b id="c-n">2</b><button id="c-mais" aria-label="Mais produtos por linha">+</button></div>
+<div id="colbar"><span>Produtos<br>por linha</span><button id="c-menos" aria-label="Menos produtos por linha">−</button><b id="c-n">2</b><button id="c-mais" aria-label="Mais produtos por linha">+</button></div>
 <div id="grelha"></div>
 <div id="outro"></div>
 <div id="vazio"><h3>Sem produtos</h3><p>Experimenta mudar os filtros.</p></div>
@@ -584,6 +602,7 @@ const cmpG=(a,b)=>gRank(a)-gRank(b)||String(a.g||'').toUpperCase().localeCompare
 const cmp=(a,b)=>cmpG(a,b)||famDe(a).localeCompare(famDe(b),'pt')||String(a.s||'').localeCompare(String(b.s||''),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true});
 const cmpNome=(a,b)=>cmpG(a,b)||famDe(a).localeCompare(famDe(b),'pt')||String(a.n).localeCompare(String(b.n),'pt',{numeric:true,sensitivity:'base'}); // grelha: família → nome (A–Z)
 function cartao(p){
+  p=ef(p);
   return '<div class="card'+(p.ex?' esg':'')+'" id="c'+p.i+'">'+
       (p.ex?'<span class="esgot">ESGOTADO</span>':'')+
       (p.pr?'<span class="tg p">PROMO</span>':'')+(p.nv?'<span class="tg n">NOVO</span>':'')+
@@ -592,6 +611,7 @@ function cartao(p){
       '<div class="nm">'+esc(p.n)+'</div>'+
       '<div class="pr">'+eur(p.p)+'</div>'+
       '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
+      (F.cart&&CART[p.i]?'<div class="ed"><button data-ed="'+p.i+'">✏️ Nome / preço</button><button data-so="'+p.i+'">+ Sortido</button></div>':'')+
     '</div>';
 }
 function desenha(){ desenha0(); setFamBtn(); }
@@ -752,7 +772,7 @@ function guardaCart(){ LS.set('VENDAS_CART',CART); contaCart(); }
 function contaCart(){
   const n=Object.values(CART).reduce((a,b)=>a+b,0);
   $('barra-n').textContent=n+(n===1?' artigo':' artigos'); $('barra-t').textContent=eur(total());
-  const bd=$('bd'); bd.textContent=n>99?'99+':n; bd.style.display=n?'flex':'none';
+  const bd=$('bd'); bd.textContent=n; bd.classList.toggle('big3',n>99); bd.style.display=n?'flex':'none';
 }
 function muda(id,d){
   const p=PMAP.get(id); if(!p) return;
@@ -766,6 +786,8 @@ function muda(id,d){
   if($('m-cart').classList.contains('on')) desenhaCart();
 }
 $('grelha').addEventListener('click',e=>{
+  const ed=e.target.closest('[data-ed]'), so=e.target.closest('[data-so]');
+  if(ed){ editaLinha(+ed.dataset.ed); return; } if(so){ sortido(+so.dataset.so); return; }
   const a=e.target.closest('[data-a]'), m=e.target.closest('[data-m]');
   if(a){ const id=+a.dataset.a, antes=CART[id]||0; muda(id,+(a.dataset.n||1)); if(!antes&&F.q) limpaPesq(); }
   else if(m) muda(+m.dataset.m,-1);
@@ -774,7 +796,25 @@ $('grelha').addEventListener('click',e=>{
     if(ph&&ph.dataset.fi){ const id=+ph.dataset.fi, p=PMAP.get(id), antes=CART[id]||0; muda(id,1); if(!antes&&F.q&&p&&!p.ex){ limpaPesq(); return; } const c=ph.closest('.card'); if(c&&p&&!p.ex){ c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); } }
   }
 });
-function linhas(){ return Object.keys(CART).map(id=>PMAP.get(+id)?{p:PMAP.get(+id),q:CART[id]}:null).filter(Boolean).sort((a,b)=>cmp(a.p,b.p)); }
+let OVR=LS.get('VENDAS_OVR',{});
+function ef(p){ const o=OVR[p.i]; return o?Object.assign({},p,{n:o.n!=null?o.n:p.n,p:o.p!=null?o.p:p.p}):p; }
+function guardaOvr(){ LS.set('VENDAS_OVR',OVR); }
+function refresca(){ contaCart(); desenha(); if($('m-cart').classList.contains('on')) desenhaCart(); }
+function editaLinha(id){
+  const base=PMAP.get(id); if(!base) return; const e=ef(base);
+  const n=prompt('Nome do produto:',e.n); if(n===null) return;
+  const pr=prompt('Preço (€) — deixa vazio para repor o original ('+eur(base.p)+'):',String(e.p).replace('.',',')); if(pr===null) return;
+  const o={}, nn=n.trim(); if(nn&&nn!==base.n) o.n=nn;
+  const t=pr.trim(); if(t!==''){ const v=parseFloat(t.replace(',','.')); if(isNaN(v)||v<0) return aviso('Preço inválido.'); if(v!==base.p) o.p=v; }
+  if(Object.keys(o).length) OVR[id]=o; else delete OVR[id];
+  guardaOvr(); refresca();
+}
+function sortido(id){
+  const base=PMAP.get(id); if(!base) return; const e=ef(base);
+  OVR[id]=Object.assign({},OVR[id]||{},{n:e.n.replace(/\s*\(?sortido\)?\s*$/i,'').trim()+' Sortido'});
+  guardaOvr(); refresca(); aviso('✅ '+OVR[id].n);
+}
+function linhas(){ return Object.keys(CART).map(id=>PMAP.get(+id)?{p:ef(PMAP.get(+id)),q:CART[id]}:null).filter(Boolean).sort((a,b)=>cmp(a.p,b.p)); }
 function total(){ return linhas().reduce((a,l)=>a+l.p.p*l.q,0); }
 function desenhaCart(){
   const ls=linhas();
@@ -783,7 +823,7 @@ function desenhaCart(){
     const u=foto(l.p), f=famDe(l.p);
     const cab=(f!==_f)?'<div class="cf">'+esc(f)+'</div>':''; _f=f;
     return cab+'<div class="ci ind">'+(u?'<img alt="" src="'+u+'">':'<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">')+
-      '<div class="t">'+esc(l.p.n)+(l.p.ex?' <b style="color:#c00;font-size:10px">ESGOTADO</b>':'')+'<small>'+eur(l.p.p)+' × '+l.q+' = <b>'+eur(l.p.p*l.q)+'</b></small></div>'+
+      '<div class="t">'+esc(l.p.n)+(l.p.ex?' <b style="color:#c00;font-size:10px">ESGOTADO</b>':'')+'<small>'+eur(l.p.p)+' × '+l.q+' = <b>'+eur(l.p.p*l.q)+'</b></small><div class="ed"><button data-ed="'+l.p.i+'">✏️ Editar</button><button data-so="'+l.p.i+'">+ Sortido</button></div></div>'+
       '<div class="qt"><button data-cm="'+l.p.i+'">−</button><b>'+l.q+'</b><button data-ca="'+l.p.i+'">+</button></div></div>';
   }).join(''):'<p class="hint" style="padding:14px 0">O carrinho está vazio.</p>';
   $('cart-total').textContent=eur(total());
@@ -792,18 +832,20 @@ function desenhaCart(){
   ls.forEach(l=>{ if(l.p.k>=0 && !foto(l.p)) Promise.resolve(pacote(l.p.k)).then(()=>{ if($('m-cart').classList.contains('on')) desenhaCart(); }); });
 }
 $('cart-lista').addEventListener('click',e=>{
+  const ed=e.target.closest('[data-ed]'), so=e.target.closest('[data-so]');
+  if(ed){ editaLinha(+ed.dataset.ed); return; } if(so){ sortido(+so.dataset.so); return; }
   const a=e.target.dataset.ca, m=e.target.dataset.cm;
   if(a) muda(+a,1); else if(m) muda(+m,-1);
 });
 const abreCart=()=>{ desenhaCart(); estadoEdit(); aba('c'); $('m-cart').classList.add('on'); };
 $('b-cart').onclick=abreCart;
-function barraEstado(){ $('barra-l').textContent=F.cart?'✕ Ver todos os produtos':'🛒 Ver carrinho'; $('barra').classList.toggle('filt',F.cart); }
+function barraEstado(){ $('barra-l').textContent=F.cart?'✕ Ver todos':'🛒 Ver carrinho'; $('barra').classList.toggle('filt',F.cart); }
 $('barra').onclick=()=>{
   if(!F.cart && !Object.keys(CART).length){ aviso('O carrinho está vazio.'); return; }
   F.cart=!F.cart; F.n=passo(); barraEstado(); desenha(); window.scrollTo({top:0});
 };
 $('b-b2b').onclick=()=>{ abreCart(); aba('p'); };
-$('b-limpa').onclick=()=>{ if(!Object.keys(CART).length) return; if(confirm('Limpar o carrinho?')){ CART={}; VCLI=''; VNOTA=''; EDIT_ID=null; guardaCart(); desenha(); desenhaCart(); estadoEdit(); } };
+$('b-limpa').onclick=()=>{ if(!Object.keys(CART).length) return; if(confirm('Limpar o carrinho?')){ CART={}; OVR={}; guardaOvr(); VCLI=''; VNOTA=''; EDIT_ID=null; guardaCart(); desenha(); desenhaCart(); estadoEdit(); } };
 
 
 let VCLI='', VNOTA='', EDIT_ID=null;
@@ -897,7 +939,7 @@ $('v-ped').addEventListener('click',e=>{
   else if(act==='pdf'){ pdfDe(o); }
   else if(act==='ab'){
     if(Object.keys(CART).length && !confirm('O carrinho atual será substituído pelo pedido de "'+(o.cli||'sem nome')+'". Continuar?')) return;
-    CART={}; o.ls.forEach(l=>{ CART[l.p.i]=l.q; PMAP.has(l.p.i)||PMAP.set(l.p.i,l.p); });
+    CART={}; OVR={}; o.ls.forEach(l=>{ CART[l.p.i]=l.q; const b=PMAP.get(l.p.i); if(!b) PMAP.set(l.p.i,l.p); else { const ov={}; if(l.p.n!==b.n) ov.n=l.p.n; if(l.p.p!==b.p) ov.p=l.p.p; if(Object.keys(ov).length) OVR[l.p.i]=ov; } }); guardaOvr();
     VCLI=o.cli||''; VNOTA=o.nota||''; EDIT_ID=o.id; guardaCart(); desenha(); aba('c');
   }
 });
@@ -1002,7 +1044,7 @@ function guardar(novo){ $('v-err').style.display='none'; $('v-cli').classList.re
   if(!o.cli){ erroCli('Escreve o nome do cliente para guardar o pedido.'); return; }
   const reg={id:(EDIT_ID&&!novo)?EDIT_ID:Date.now()+Math.floor(Math.random()*1000),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u}}))};
   const all=pedidos().filter(x=>x.id!==reg.id); all.push(reg); guardaPedidos(all);
-  CART={}; VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); if(F.q) limpaPesq(); else desenha(); aba('p'); aviso('Pedido guardado ✅ ('+pedidos().length+' guardados)');
+  CART={}; OVR={}; guardaOvr(); VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); if(F.q) limpaPesq(); else desenha(); aba('p'); aviso('Pedido guardado ✅ ('+pedidos().length+' guardados)');
 }
 $('b-guarda').onclick=()=>guardar(false); $('b-novo').onclick=()=>guardar(true);
 
@@ -1159,7 +1201,7 @@ LS.pronto.then(()=>{
   const lsPed=(()=>{ try{ return JSON.parse(localStorage.getItem(PED_K)||'[]'); }catch(e){ return []; } })();
   if(!(PED_K in KV) && lsPed.length) LS.set(PED_K,lsPed);       // migra pedidos antigos
   if('VENDAS_CART' in KV) CART=KV.VENDAS_CART;
-  carregaMan();
+  carregaMan(); OVR=LS.get('VENDAS_OVR',{});
   if(PROD.length) desenha();
   contaCart(); contaPed();
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
