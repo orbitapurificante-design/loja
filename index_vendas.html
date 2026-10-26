@@ -367,6 +367,13 @@ header:not(.solid) .brand .nome{filter:none}
 .ed button{flex:1;border:1px solid #cfd6e3;background:#f4f7fc;color:#1b2330;border-radius:8px;padding:5px 4px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
 .card .ed{padding:0 6px 8px}
 #barra>span{white-space:nowrap}
+
+.card .ned{padding:3.5cqw 4cqw 0;min-height:0;display:block}
+.card .en,.ci .en{width:100%;box-sizing:border-box;border:1.5px solid #b9c4d8;border-radius:8px;padding:5px 7px;font:inherit;font-size:clamp(11px,6cqw,15px);font-weight:600;background:#f7faff;color:#1b2330}
+.ci .en{font-size:14px;margin-bottom:3px}
+.card .ped{display:flex;align-items:center;justify-content:center;gap:3px}
+.card .ep,.ci .ep{width:6.2em;box-sizing:border-box;border:1.5px solid #b9c4d8;border-radius:8px;padding:4px 6px;text-align:center;font:inherit;font-weight:700;color:var(--red);background:#f7faff;font-size:inherit}
+.ci .er{display:flex;align-items:center;gap:4px;font-size:13px}.ci .ep{font-size:14px;width:5.4em}
 </style>
 </head>
 <body>
@@ -608,10 +615,11 @@ function cartao(p){
       (p.pr?'<span class="tg p">PROMO</span>':'')+(p.nv?'<span class="tg n">NOVO</span>':'')+
       '<span class="qb" id="qb'+p.i+'"'+(CART[p.i]?'':' style="display:none"')+'>'+(CART[p.i]||0)+'</span>'+
       '<div class="ph" data-fi="'+p.i+'"><span>📦</span></div>'+
-      '<div class="nm">'+esc(p.n)+'</div>'+
-      '<div class="pr">'+eur(p.p)+'</div>'+
+      (F.cart&&CART[p.i]
+        ? '<div class="nm ned"><input class="en" data-en="'+p.i+'" value="'+esc(p.n)+'" aria-label="Nome do produto"></div><div class="pr ped"><input class="ep" data-ep="'+p.i+'" inputmode="decimal" value="'+String(Math.round(p.p*100)/100).replace('.',',')+'" aria-label="Preço"> €</div>'
+        : '<div class="nm">'+esc(p.n)+'</div><div class="pr">'+eur(p.p)+'</div>')+
       '<div class="ac" id="ac'+p.i+'">'+cartaoQt(p)+(p.u>1&&!p.ex?'<button class="btn-cx" data-a="'+p.i+'" data-n="'+p.u+'">CX<br>'+p.u+'</button>':'')+'</div>'+
-      (F.cart&&CART[p.i]?'<div class="ed"><button data-ed="'+p.i+'">✏️ Nome / preço</button><button data-so="'+p.i+'">+ Sortido</button></div>':'')+
+      (F.cart&&CART[p.i]?'<div class="ed"><button data-so="'+p.i+'">+ Sortido</button></div>':'')+
     '</div>';
 }
 function desenha(){ desenha0(); setFamBtn(); }
@@ -823,7 +831,7 @@ function desenhaCart(){
     const u=foto(l.p), f=famDe(l.p);
     const cab=(f!==_f)?'<div class="cf">'+esc(f)+'</div>':''; _f=f;
     return cab+'<div class="ci ind">'+(u?'<img alt="" src="'+u+'">':'<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">')+
-      '<div class="t">'+esc(l.p.n)+(l.p.ex?' <b style="color:#c00;font-size:10px">ESGOTADO</b>':'')+'<small>'+eur(l.p.p)+' × '+l.q+' = <b>'+eur(l.p.p*l.q)+'</b></small><div class="ed"><button data-ed="'+l.p.i+'">✏️ Editar</button><button data-so="'+l.p.i+'">+ Sortido</button></div></div>'+
+      '<div class="t">'+(l.p.ex?'<b style="color:#c00;font-size:10px">ESGOTADO </b>':'')+'<input class="en" data-en="'+l.p.i+'" value="'+esc(l.p.n)+'" aria-label="Nome do produto"><small class="er"><input class="ep" data-ep="'+l.p.i+'" inputmode="decimal" value="'+String(Math.round(l.p.p*100)/100).replace('.',',')+'" aria-label="Preço"> € × '+l.q+' = <b data-sm="'+l.p.i+'">'+eur(l.p.p*l.q)+'</b></small><div class="ed"><button data-so="'+l.p.i+'">+ Sortido</button></div></div>'+
       '<div class="qt"><button data-cm="'+l.p.i+'">−</button><b>'+l.q+'</b><button data-ca="'+l.p.i+'">+</button></div></div>';
   }).join(''):'<p class="hint" style="padding:14px 0">O carrinho está vazio.</p>';
   $('cart-total').textContent=eur(total());
@@ -1172,6 +1180,31 @@ $('outro').addEventListener('click',e=>{
   const p={i:id,e:'',n:nome,p:preco,c:'OUTROS PRODUTOS',s:'',m:'',g:'',u:1,k:-1,pr:0,nv:0,ex:0,man:1};
   MAN[id]=p; LS.set('VENDAS_MAN',MAN); PMAP.set(id,p);
   CART[id]=qtd; guardaCart(); aviso('✅ '+qtd+'× '+nome+' no carrinho'); limpaPesq();
+});
+
+/* ───────────── editar nome e preço diretamente ───────────── */
+function aplicaEdit(inp){
+  const id=+(inp.dataset.en||inp.dataset.ep), base=PMAP.get(id); if(!base) return;
+  const o=Object.assign({},OVR[id]||{});
+  if(inp.dataset.en!=null){
+    const n=inp.value.trim(); if(n&&n!==base.n) o.n=n; else delete o.n;
+    if(!n) inp.value=base.n;
+  }else{
+    const t=inp.value.trim().replace(',','.'); const v=parseFloat(t);
+    if(t===''){ delete o.p; inp.value=String(Math.round(base.p*100)/100).replace('.',','); }
+    else if(isNaN(v)||v<0){ aviso('Preço inválido.'); const e=ef(base); inp.value=String(Math.round(e.p*100)/100).replace('.',','); return; }
+    else if(v!==base.p) o.p=v; else delete o.p;
+  }
+  if(Object.keys(o).length) OVR[id]=o; else delete OVR[id];
+  guardaOvr(); contaCart();
+  const e=ef(base), sm=document.querySelector('[data-sm="'+id+'"]'); if(sm) sm.textContent=eur(e.p*(CART[id]||0));
+  if($('m-cart').classList.contains('on')) $('cart-total').textContent=eur(total());
+}
+['grelha','cart-lista'].forEach(i=>{
+  const el=$(i);
+  el.addEventListener('change',e=>{ if(e.target.matches('[data-en],[data-ep]')) aplicaEdit(e.target); });
+  el.addEventListener('focusin',e=>{ if(e.target.matches('.ep')) setTimeout(()=>{ try{ e.target.select(); }catch(x){} },0); });
+  el.addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.matches('[data-en],[data-ep]')) e.target.blur(); });
 });
 /* ───────────── manter o dedo no − / + : repete e acelera ───────────── */
 (function(){
