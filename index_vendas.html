@@ -318,6 +318,37 @@ header:not(.solid) .brand .nome{filter:none}
 .c0{border:1px solid #e1e5eb;background:#fff;border-radius:10px;padding:11px 12px;text-align:left;font-size:14px;font-weight:600;cursor:pointer}
 .c0.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .c0.todas{background:#eef2f8;color:#b71c1c}.c0.todas.on{background:#eef2f8;color:#b71c1c;border-color:#b71c1c}
+
+/* v12: pesquisa no topo, barra azul, fundo branco nas fotos */
+.brand{flex:1;min-width:0;justify-content:flex-start;gap:6px}
+.brand .sq{flex:1 1 0;max-width:none}
+.brand .sq input[type=search]{width:100%;height:36px;border:none;background:#eef1f6;color:var(--ink);border-radius:18px;font-size:16px;font-weight:500;padding:0 12px;text-shadow:none;outline:none}
+.brand .sq input[type=search]:not(:placeholder-shown){padding-left:34px}
+.brand .sq input[type=search]::-webkit-search-cancel-button,.brand .sq input[type=search]::-webkit-search-decoration{-webkit-appearance:none;display:none}
+.brand .sq input[type=search]::placeholder{color:#7d8799;font-weight:400}
+.brand .sq input[type=search]:focus{background:#e4e9f2}
+.sq #f-qx{left:6px;right:auto;width:24px;height:24px;line-height:24px;font-size:13px;background:#9aa3b5}
+#fbar{background:var(--acc);color:#fff}
+#fbar .in{padding:5px 6px 6px;gap:3px}
+#fbar .cbtn,#fbar .chip{background:transparent;border:none;color:#fff;text-shadow:none;height:28px;font-size:12px;font-weight:700;border-radius:14px;padding:0 8px;transition:background .15s}
+#fbar .cbtn{min-width:70px;max-width:120px;flex:0 1 auto}
+#fbar .chip{padding:0 7px;font-size:11px}
+#fbar .cbtn:active,#fbar .chip:active{background:rgba(255,255,255,.25)}
+#fbar .cbtn.on,#fbar .chip.on,#fbar .chip.nv.on{background:#fff;color:var(--acc);border:none}
+#fbar #colbar{margin:0 0 0 auto;padding:0;max-width:none;gap:2px;color:#fff;flex:0 0 auto}
+#fbar #colbar span{display:none}
+#fbar #colbar button{width:28px;height:28px;border:none;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;font-size:17px}
+#fbar #colbar b{color:#fff;min-width:16px;font-size:13px}
+#fbar.stuck{box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.card .ph{background:#fff}
+.card{background:#fff}
+.qt button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+
+.ob{background:#fff7e0;border:1.5px solid #f0c040;border-radius:14px;padding:12px;margin:12px 10px}
+.obt{font-size:14px;margin-bottom:8px}
+.ob input{width:100%;padding:12px;border:1.5px solid #ccc;border-radius:10px;font-size:16px;margin-bottom:8px;background:#fff}
+.ob .or{display:flex;gap:8px}.ob .or input{flex:1;min-width:0}
+.ob .big{margin:0}
 </style>
 </head>
 <body>
@@ -327,7 +358,8 @@ header:not(.solid) .brand .nome{filter:none}
     <button class="ico" id="b-menu" aria-label="Marcas">☰</button>
     <div class="brand">
       <img id="logo" alt="">
-      <div><span class="nome" id="nome">LOJA</span></div>
+      <span class="nome" id="nome" style="display:none">LOJA</span>
+      <span class="sq"><input type="search" id="f-q" placeholder="Pesquisar produto…" autocomplete="off"><button type="button" id="f-qx" aria-label="Limpar pesquisa">✕</button></span>
     </div>
     <button class="ico b2b" id="b-b2b" aria-label="Pedidos">PEDIDOS<span class="np" id="np0"></span></button>
     <button class="ico usr" id="b-user" style="display:none" aria-label="Entrar"><span class="ui">👤</span><span class="ut" id="ut">ENTRAR</span></button>
@@ -347,7 +379,7 @@ header:not(.solid) .brand .nome{filter:none}
   <select id="f-cat" style="display:none"><option value="">Categorias</option></select><button type="button" class="cbtn" id="f-catb">Categorias ▾</button>
   <button class="chip" id="f-promo">🔥PROMOÇÕES</button>
   <button class="chip nv" id="f-novo">✨NOVIDADES</button>
-  <span class="sq"><input type="search" id="f-q" placeholder="🔍 Pesquisar…" autocomplete="off"><button type="button" id="f-qx" aria-label="Limpar pesquisa">✕</button></span>
+  
 </div></div>
 
 <div id="off"></div>
@@ -355,6 +387,7 @@ header:not(.solid) .brand .nome{filter:none}
 
 <div id="colbar"><span>Produtos por linha</span><button id="c-menos" aria-label="Menos produtos por linha">−</button><b id="c-n">2</b><button id="c-mais" aria-label="Mais produtos por linha">+</button></div>
 <div id="grelha"></div>
+<div id="outro"></div>
 <div id="vazio"><h3>Sem produtos</h3><p>Experimenta mudar os filtros.</p></div>
 <div style="text-align:center"><button id="mais">MOSTRAR MAIS</button></div>
 
@@ -562,7 +595,7 @@ function cartao(p){
     '</div>';
 }
 function desenha(){ desenha0(); setFamBtn(); }
-function setFamBtn(){ sincFiltros(); const fams=[...new Set(filtrados().map(famDe))]; const b=$('b-fam'); if(b) b.textContent=(fams.length&&fams.every(f=>FECH.has(f)))?'▼ Abrir famílias':'▲ Fechar famílias'; }
+function setFamBtn(){ sincFiltros(); outroBox(); const fams=[...new Set(filtrados().map(famDe))]; const b=$('b-fam'); if(b) b.textContent=(fams.length&&fams.every(f=>FECH.has(f)))?'▼ Abrir famílias':'▲ Fechar famílias'; }
 $('b-fam').onclick=e=>{ e.stopPropagation(); const fams=[...new Set(filtrados().map(famDe))]; if(fams.every(f=>FECH.has(f))) FECH.clear(); else fams.forEach(f=>FECH.add(f)); desenha(); };
 function desenha0(){
   const lista=filtrados().sort(cmp);
@@ -602,6 +635,7 @@ $('ativos').addEventListener('click',e=>{
 $('f-cat').onchange=e=>{ F.sub=e.target.value; F.n=passo(); desenha(); };
 $('f-promo').onclick=e=>{ F.promo=!F.promo; e.currentTarget.classList.toggle('on',F.promo); F.n=passo(); desenha(); };
 $('f-novo').onclick=e=>{ F.novo=!F.novo; e.currentTarget.classList.toggle('on',F.novo); F.n=passo(); desenha(); };
+function limpaPesq(){ clearTimeout(tq); $('f-q').value=''; F.q=''; $('f-qx').classList.remove('has'); F.n=passo(); desenha(); }
 let tq; $('f-q').oninput=e=>{ $('f-qx').classList.toggle('has',!!e.target.value); clearTimeout(tq); tq=setTimeout(()=>{ F.q=e.target.value; F.n=passo(); desenha(); },180); };
 $('f-qx').onclick=()=>{ clearTimeout(tq); $('f-q').value=''; F.q=''; $('f-qx').classList.remove('has'); F.n=passo(); desenha(); $('f-q').focus(); };
 function listaCat(){
@@ -651,7 +685,7 @@ let bi=0, bt=null;
 function iniciaBanner(){
   const bs=CFG.banners||[]; if(!bs.length) return;
   $('banner').style.display='block';
-  $('banner').appendChild($('colbar'));
+  $('fbar').querySelector('.in').appendChild($('colbar'));
   $('bn-track').innerHTML=bs.map(b=>'<div class="bn-s">'+(b.t==='video'
      ?'<video src="'+esc(b.s)+'" muted playsinline preload="metadata"></video>'
      :'<img alt="" src="'+b.s+'">')+'</div>').join('');
@@ -733,11 +767,11 @@ function muda(id,d){
 }
 $('grelha').addEventListener('click',e=>{
   const a=e.target.closest('[data-a]'), m=e.target.closest('[data-m]');
-  if(a) muda(+a.dataset.a, +(a.dataset.n||1));
+  if(a){ const id=+a.dataset.a, antes=CART[id]||0; muda(id,+(a.dataset.n||1)); if(!antes&&F.q) limpaPesq(); }
   else if(m) muda(+m.dataset.m,-1);
   else{
     const ph=e.target.closest('.ph');
-    if(ph&&ph.dataset.fi){ const id=+ph.dataset.fi, p=PMAP.get(id); muda(id,1); const c=ph.closest('.card'); if(c&&p&&!p.ex){ c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); } }
+    if(ph&&ph.dataset.fi){ const id=+ph.dataset.fi, p=PMAP.get(id), antes=CART[id]||0; muda(id,1); if(!antes&&F.q&&p&&!p.ex){ limpaPesq(); return; } const c=ph.closest('.card'); if(c&&p&&!p.ex){ c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); } }
   }
 });
 function linhas(){ return Object.keys(CART).map(id=>PMAP.get(+id)?{p:PMAP.get(+id),q:CART[id]}:null).filter(Boolean).sort((a,b)=>cmp(a.p,b.p)); }
@@ -968,7 +1002,7 @@ function guardar(novo){ $('v-err').style.display='none'; $('v-cli').classList.re
   if(!o.cli){ erroCli('Escreve o nome do cliente para guardar o pedido.'); return; }
   const reg={id:(EDIT_ID&&!novo)?EDIT_ID:Date.now()+Math.floor(Math.random()*1000),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u}}))};
   const all=pedidos().filter(x=>x.id!==reg.id); all.push(reg); guardaPedidos(all);
-  CART={}; VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); desenha(); aba('p'); aviso('Pedido guardado ✅ ('+pedidos().length+' guardados)');
+  CART={}; VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); if(F.q) limpaPesq(); else desenha(); aba('p'); aviso('Pedido guardado ✅ ('+pedidos().length+' guardados)');
 }
 $('b-guarda').onclick=()=>guardar(false); $('b-novo').onclick=()=>guardar(true);
 
@@ -1072,12 +1106,60 @@ function limpaFiltros(){
   window.addEventListener('load',()=>setTimeout(()=>{ if(PROD.length) pre(); else setTimeout(pre,2500); },1500));
   window.addEventListener('online',()=>setTimeout(pre,800));
 })();
-iniciar(); contaPed();
+
+
+/* ───────────── outros produtos (não encontrados na pesquisa) ───────────── */
+let MAN=LS.get('VENDAS_MAN',{});
+function carregaMan(){ MAN=LS.get('VENDAS_MAN',{}); Object.values(MAN).forEach(p=>PMAP.set(p.i,p)); }
+function outroBox(){
+  const o=$('outro'); if(!o) return; const q=(F.q||'').trim();
+  if(!(q && filtrados().length===0)){ o.style.display='none'; o.dataset.q=''; return; }
+  $('vazio').style.display='none';
+  o.style.display='block';
+  if(o.dataset.q===q) return; o.dataset.q=q;
+  o.innerHTML='<div class="ob"><div class="obt">Não encontrei «'+esc(q)+'».<br>Adicionar como <b>outro produto</b>:</div>'+
+    '<input type="text" id="o-n" value="'+esc(q)+'" placeholder="Nome do produto">'+
+    '<div class="or"><input type="number" id="o-q" inputmode="numeric" min="1" value="1" placeholder="Qtd"><input type="text" id="o-p" inputmode="decimal" placeholder="Preço € (opcional)"></div>'+
+    '<button class="big" id="o-ok">➕ ADICIONAR AO CARRINHO</button></div>';
+}
+$('outro').addEventListener('click',e=>{
+  if(!e.target.closest('#o-ok')) return;
+  const nome=$('o-n').value.trim(); if(!nome) return aviso('Escreve o nome do produto.');
+  const qtd=Math.max(1,parseInt($('o-q').value)||1), preco=parseFloat(String($('o-p').value).replace(',','.'))||0;
+  const id=-(Date.now()%1000000000)-Math.floor(Math.random()*1000);
+  const p={i:id,e:'',n:nome,p:preco,c:'OUTROS PRODUTOS',s:'',m:'',g:'',u:1,k:-1,pr:0,nv:0,ex:0,man:1};
+  MAN[id]=p; LS.set('VENDAS_MAN',MAN); PMAP.set(id,p);
+  CART[id]=qtd; guardaCart(); aviso('✅ '+qtd+'× '+nome+' no carrinho'); limpaPesq();
+});
+/* ───────────── manter o dedo no − / + : repete e acelera ───────────── */
+(function(){
+  let tm=null, held=false;
+  const stop=()=>{ clearTimeout(tm); tm=null; };
+  document.addEventListener('pointerup',stop); document.addEventListener('pointercancel',stop);
+  document.addEventListener('click',e=>{ if(held){ e.preventDefault(); e.stopPropagation(); held=false; } },true);
+  document.addEventListener('contextmenu',e=>{ if(e.target.closest('.qt')) e.preventDefault(); });
+  document.addEventListener('pointerdown',e=>{
+    held=false; stop();
+    const b=e.target.closest('.qt button'); if(!b) return;
+    const a=b.dataset.a!=null?b.dataset.a:b.dataset.ca, m=b.dataset.m!=null?b.dataset.m:b.dataset.cm;
+    const id=+(a!=null?a:m), sinal=a!=null?1:-1; if(isNaN(id)) return;
+    let n=0, d=240;
+    const passo=()=>{
+      n++; const k=n>45?10:n>25?5:n>10?2:1;
+      muda(id,sinal*k);
+      if(sinal<0 && !(CART[id]>0)){ stop(); return; }
+      d=Math.max(40,d*0.94); tm=setTimeout(passo,d);
+    };
+    tm=setTimeout(()=>{ held=true; passo(); },420);
+  });
+})();
+carregaMan(); iniciar(); contaPed();
 LS.pronto.then(()=>{
   // dados guardados em IndexedDB: carrinho, pedidos e definições
   const lsPed=(()=>{ try{ return JSON.parse(localStorage.getItem(PED_K)||'[]'); }catch(e){ return []; } })();
   if(!(PED_K in KV) && lsPed.length) LS.set(PED_K,lsPed);       // migra pedidos antigos
   if('VENDAS_CART' in KV) CART=KV.VENDAS_CART;
+  carregaMan();
   if(PROD.length) desenha();
   contaCart(); contaPed();
   try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
