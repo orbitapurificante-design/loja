@@ -1046,12 +1046,12 @@ async function enviarEnc(lista){
   const encomendas=lista.map(o=>({
     id:o.id, data:new Date(o.ts).toLocaleString('pt-PT'), dataISO:isoDe(o.ts), obs:outrosTxt(o), nota:o.nota||'',
     cliente:{num:'V-'+slug(o.cli), nome:o.cli||'Sem nome'},
-    itens:o.ls.filter(l=>!l.p.man).map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))
+    itens:o.ls.filter(l=>!l.p.man).map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:l.p.f||''}))
   }));
   const dev=dispositivo();
   const gerais=[...new Set(lista.map(o=>isoDe(o.ts)))].map(iso=>{
     const rs=resumoDia(iso).filter(l=>!l.p.man), dia=pedidos().filter(o=>isoDe(o.ts)===iso); // resumo do dia = todos os pedidos guardados desse dia
-    return {uid:'G-'+dev+'-'+iso,dia:iso,vendedor:vend,fontes:[],obs:fundirNotas(dia.map(o=>({cli:o.cli,texto:outrosTxt(o)}))),notas:fundirNotas(dia.map(o=>({cli:o.cli,texto:o.nota}))),itens:rs.map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:''}))};
+    return {uid:'G-'+dev+'-'+iso,dia:iso,vendedor:vend,fontes:[],obs:fundirNotas(dia.map(o=>({cli:o.cli,texto:outrosTxt(o)}))),notas:fundirNotas(dia.map(o=>({cli:o.cli,texto:o.nota}))),itens:rs.map(l=>({id:l.p.i,ean:l.p.e||'',nome:l.p.n,cat:l.p.c||'',preco:l.p.p,q:l.q,f:l.p.f||''}))};
   });
   const pacote={tipo:'dumelhor_encomendas',versao:2,vendedor:vend,dataEnvio:new Date().toISOString(),encomendas,gerais,fotos:{}};
   const nomeF='dumelhor-encomendas-vendas-'+slug(vend)+'-'+isoDe(Date.now())+'.json';
@@ -1083,7 +1083,7 @@ $('v-cli').addEventListener('input',()=>{ $('v-err').style.display='none'; $('v-
 function guardar(novo){ $('v-err').style.display='none'; $('v-cli').classList.remove('bad');
   const o=atual(); if(!o.ls.length) return aviso('O carrinho está vazio.');
   if(!o.cli){ erroCli('Escreve o nome do cliente para guardar o pedido.'); return; }
-  const reg={id:(EDIT_ID&&!novo)?EDIT_ID:Date.now()+Math.floor(Math.random()*1000),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u,man:l.p.man?1:0}}))};
+  const reg={id:(EDIT_ID&&!novo)?EDIT_ID:Date.now()+Math.floor(Math.random()*1000),ts:o.ts,cli:o.cli,nota:o.nota,ls:o.ls.map(l=>({q:l.q,p:{i:l.p.i,e:l.p.e||'',n:l.p.n,p:l.p.p,c:l.p.c,s:l.p.s,m:l.p.m,u:l.p.u,f:l.p.f||'',man:l.p.man?1:0}}))};
   const all=pedidos().filter(x=>x.id!==reg.id); all.push(reg); guardaPedidos(all);
   CART={}; OVR={}; guardaOvr(); VCLI=''; VNOTA=''; EDIT_ID=null; F.cart=false; barraEstado(); guardaCart(); if(F.q) limpaPesq(); else desenha(); aba('p'); aviso('Pedido guardado ✅ ('+pedidos().length+' guardados)');
 }
