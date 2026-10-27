@@ -804,11 +804,11 @@ $('grelha').addEventListener('click',e=>{
   const ed=e.target.closest('[data-ed]'), so=e.target.closest('[data-so]');
   if(ed){ editaLinha(+ed.dataset.ed); return; } if(so){ sortido(+so.dataset.so); return; }
   const a=e.target.closest('[data-a]'), m=e.target.closest('[data-m]');
-  if(a){ const id=+a.dataset.a, antes=CART[id]||0; muda(id,+(a.dataset.n||1)); if(!antes&&F.q) limpaPesq(); }
+  if(a){ muda(+a.dataset.a, +(a.dataset.n||1)); }
   else if(m) muda(+m.dataset.m,-1);
   else{
     const ph=e.target.closest('.ph');
-    if(ph&&ph.dataset.fi){ const id=+ph.dataset.fi, p=PMAP.get(id), antes=CART[id]||0; muda(id,1); if(!antes&&F.q&&p&&!p.ex){ limpaPesq(); return; } const c=ph.closest('.card'); if(c&&p&&!p.ex){ c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); } }
+    if(ph&&ph.dataset.fi){ const id=+ph.dataset.fi, p=PMAP.get(id); muda(id,1); const c=ph.closest('.card'); if(c&&p&&!p.ex){ c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); } }
   }
 });
 let OVR=LS.get('VENDAS_OVR',{});
