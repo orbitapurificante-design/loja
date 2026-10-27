@@ -378,6 +378,9 @@ header:not(.solid) .brand .nome{filter:none}
 .sortk{position:absolute;left:2cqw;top:calc(100cqw - 8cqw);z-index:4;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.9);border-radius:8px;padding:1px 6px 1px 3px;font-size:clamp(8px,4.4cqw,11px);font-weight:700;color:#1b2330;box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:pointer}
 .sortk input{width:clamp(11px,5cqw,14px);height:clamp(11px,5cqw,14px);margin:0}
 .rn{font-size:12px;color:#334;padding:6px 0 2px}
+
+.ev .dts{gap:8px}.ev .dts>div{flex:1}.ev .dts label{margin-top:4px}
+.ev input[type=date]{width:100%;padding:10px;border:1.5px solid #ccc;border-radius:9px;font-size:15px;background:#fff;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -981,21 +984,24 @@ function ligarGit(forca){
 function painelEnvio(){
   const e=$('v-env'); if(e.innerHTML){ e.innerHTML=''; return; }
   const clis=[...new Set(pedidos().map(o=>o.cli).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const hoje=isoDe(Date.now());
   e.innerHTML='<div class="ev"><div class="evt">📤 ENVIAR ENCOMENDAS</div>'+
     '<div class="pdb"><button id="ev-h" class="on">HOJE</button><button id="ev-t">TODAS AS DATAS</button></div>'+
+    '<div class="pdb dts"><div><label>DE</label><input type="date" id="ev-i" value="'+hoje+'"></div><div><label>ATÉ</label><input type="date" id="ev-f" value="'+hoje+'"></div></div>'+
     '<label>Cliente</label><select id="ev-c"><option value="">TODOS OS CLIENTES</option>'+clis.map(c=>'<option>'+esc(c)+'</option>').join('')+'</select>'+
     '<label class="ck"><input type="checkbox" id="ev-n"> Só as que ainda não foram enviadas</label>'+
     '<div id="ev-k" class="evk"></div>'+
     '<div class="pdb"><button id="ev-x">CANCELAR</button><button id="ev-ok" class="go">ENVIAR</button></div></div>';
-  let modo='h';
-  const lista=()=>{ const c=$('ev-c').value, n=$('ev-n').checked, hoje=isoDe(Date.now());
-    return pedidos().filter(o=>(modo==='t'||isoDe(o.ts)===hoje)&&(!c||o.cli===c)&&(!n||!o.env)); };
+  const lista=()=>{ const c=$('ev-c').value, n=$('ev-n').checked, di=$('ev-i').value, df=$('ev-f').value;
+    return pedidos().filter(o=>{ const d=isoDe(o.ts); return (!di||d>=di)&&(!df||d<=df)&&(!c||o.cli===c)&&(!n||!o.env); }); };
+  const marca=m=>{ $('ev-h').classList.toggle('on',m==='h'); $('ev-t').classList.toggle('on',m==='t'); };
   const cont=()=>{ $('ev-k').textContent=lista().length+' encomenda(s) serão enviadas'; };
-  $('ev-h').onclick=()=>{ modo='h'; $('ev-h').classList.add('on'); $('ev-t').classList.remove('on'); cont(); };
-  $('ev-t').onclick=()=>{ modo='t'; $('ev-t').classList.add('on'); $('ev-h').classList.remove('on'); cont(); };
+  $('ev-h').onclick=()=>{ $('ev-i').value=hoje; $('ev-f').value=hoje; marca('h'); cont(); };
+  $('ev-t').onclick=()=>{ $('ev-i').value=''; $('ev-f').value=''; marca('t'); cont(); };
+  ['ev-i','ev-f'].forEach(id=>{ $(id).onchange=()=>{ marca(''); cont(); }; });
   $('ev-c').onchange=cont; $('ev-n').onchange=cont; cont();
   $('ev-x').onclick=()=>{ e.innerHTML=''; };
-  $('ev-ok').onclick=()=>enviarEnc(lista());
+  $('ev-ok').onclick=()=>{ const di=$('ev-i').value, df=$('ev-f').value; if(di&&df&&di>df) return aviso('A data "DE" é posterior à data "ATÉ".'); enviarEnc(lista()); };
 }
 async function ghPut(path,obj,msg,token){
   const H={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'};
