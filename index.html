@@ -735,7 +735,9 @@ function desenhaCart(){
   $('cart-total').textContent=eur(total());
   const c=cliente();
   $('cart-cli').innerHTML=c?('Cliente: <b>'+esc(c.nome)+'</b> · '+esc(c.tel)+(c.morada?'<br>'+esc(c.morada):'')):'Não tens sessão iniciada. Podes <b>entrar/registar-te</b> (👤) para os teus dados irem na encomenda.';
-  ls.forEach(l=>{ if(l.p.k>=0 && !foto(l.p)) Promise.resolve(pacote(l.p.k)).then(()=>{ if($('m-cart').classList.contains('on')) desenhaCart(); }); });
+  // descarrega só os pacotes de fotos AINDA não carregados e redesenha uma única vez (antes redesenhava em ciclo quando um produto não tinha foto no pacote -> bloqueava o tablet)
+  const _ks=[...new Set(ls.filter(l=>l.p.k>=0 && !(l.p.k in PAC)).map(l=>l.p.k))];
+  if(_ks.length) Promise.all(_ks.map(k=>pacote(k))).then(()=>{ if($('m-cart').classList.contains('on')) desenhaCart(); });
 }
 $('cart-lista').addEventListener('click',e=>{
   const a=e.target.dataset.ca, m=e.target.dataset.cm;
