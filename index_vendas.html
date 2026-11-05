@@ -381,6 +381,15 @@ header:not(.solid) .brand .nome{filter:none}
 
 .ev .dts{gap:8px}.ev .dts>div{flex:1}.ev .dts label{margin-top:4px}
 .ev input[type=date]{width:100%;padding:10px;border:1.5px solid #ccc;border-radius:9px;font-size:15px;background:#fff;box-sizing:border-box}
+
+/* carrinho: cabeçalho (título + ✕ + separadores) fixo no topo, só o conteúdo desliza; altura segue a área visível do Chrome (--vh) */
+.sheet{max-height:calc(var(--vh,1vh)*94)}
+#m-cart .sheet{display:flex;flex-direction:column;overflow:hidden;padding:0}
+#m-cart .shead{flex-shrink:0;padding:14px 16px 6px;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+#m-cart .shead h2{margin:0 0 8px}
+#m-cart .shead .tabs{margin-bottom:2px}
+#m-cart .sbody{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:10px 16px 16px}
+#barra-l{cursor:pointer;padding:9px 12px;margin:-9px -12px;-webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
@@ -432,8 +441,11 @@ header:not(.solid) .brand .nome{filter:none}
 
 <!-- carrinho -->
 <div class="modal" id="m-cart"><div class="sheet">
+  <div class="shead">
   <h2><span>🛒 Carrinho</span><button data-fecha>✕</button></h2>
   <div class="tabs"><button id="tb-c" class="on">CARRINHO</button><button id="tb-p">PEDIDOS <b id="np">0</b></button></div>
+  </div>
+  <div class="sbody" id="cart-sbody">
   <div id="v-cart">
     <div id="cart-lista"></div>
     <div class="tot"><span>TOTAL</span><span id="cart-total">0,00 €</span></div>
@@ -448,6 +460,7 @@ header:not(.solid) .brand .nome{filter:none}
     <button class="big sec" id="b-limpa">🗑️ Limpar carrinho</button>
   </div>
   <div id="v-ped" style="display:none"></div>
+  </div>
 </div></div>
 
 <!-- login / registo -->
@@ -487,6 +500,7 @@ header:not(.solid) .brand .nome{filter:none}
 <div id="aviso"></div>
 
 <script>
+(function(){ const v=()=>document.documentElement.style.setProperty('--vh',(window.innerHeight*0.01)+'px'); v(); addEventListener('resize',v); addEventListener('orientationchange',v); })();
 (function(){
 'use strict';
 const $ = id => document.getElementById(id);
@@ -863,10 +877,10 @@ $('cart-lista').addEventListener('click',e=>{
   const a=e.target.dataset.ca, m=e.target.dataset.cm;
   if(a) muda(+a,1); else if(m) muda(+m,-1);
 });
-const abreCart=()=>{ desenhaCart(); estadoEdit(); aba('c'); $('m-cart').classList.add('on'); };
+const abreCart=()=>{ desenhaCart(); estadoEdit(); aba('c'); $('m-cart').classList.add('on'); $('cart-sbody').scrollTop=0; };
 $('b-cart').onclick=abreCart;
 function barraEstado(){ $('barra-l').textContent=F.cart?'✕ Ver todos':'🛒 Ver carrinho'; $('barra').classList.toggle('filt',F.cart); }
-$('barra').onclick=()=>{
+$('barra-l').onclick=()=>{
   if(!F.cart && !Object.keys(CART).length){ aviso('O carrinho está vazio.'); return; }
   F.cart=!F.cart; F.n=passo(); barraEstado(); desenha(); window.scrollTo({top:0});
 };
@@ -910,6 +924,7 @@ function aba(x){
   $('tb-c').classList.toggle('on',x==='c'); $('tb-p').classList.toggle('on',x==='p');
   $('v-cart').style.display=x==='c'?'block':'none'; $('v-ped').style.display=x==='p'?'block':'none';
   if(x==='p') desenhaPed(); else { desenhaCart(); estadoEdit(); }
+  $('cart-sbody').scrollTop=0;
 }
 $('tb-c').onclick=()=>aba('c'); $('tb-p').onclick=()=>aba('p');
 const isoDe=ts=>{ const d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
